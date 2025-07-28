@@ -44,6 +44,7 @@ function SegundaPagina({ user }) {
   const qrActual = user?.apartmentNumber ? `${user.apartmentNumber}|${codigos[indexActual]}` : '';
 
 
+
   const manejarVolver = () => {
     const nuevoIndex = indexActual + 1;
 
@@ -59,7 +60,7 @@ function SegundaPagina({ user }) {
   };
 
   return (
-    <div style={{ color: 'white', textAlign: 'center', paddingTop: '50px' }}>
+    <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', textAlign: 'center', paddingTop: '50px' }}>
       <h2 style={{ marginBottom: '30px' }}>Bienvenido a la segunda página</h2>
 
       {/* Mostrar los 3 códigos en fila */}
