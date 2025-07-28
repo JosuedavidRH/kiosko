@@ -196,6 +196,9 @@ useEffect(() => {
  
   return (
     <Routes>
+
+    <Route path="/segunda" element={<SegundaPagina user={{ username: user, apartmentNumber }} />} />
+
       <Route
         path="/"
         element={
