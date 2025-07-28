@@ -607,7 +607,7 @@ useEffect(() => {
 
               console.log('📤 Enviando a guardar_numero:', payload);
 
-              await fetch('https://backend-1uwd.onrender.com/api/guardar_numero', {
+              await fetch('https://backend-1uwd.onrender.com/api/guardar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
