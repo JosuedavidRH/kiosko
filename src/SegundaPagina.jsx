@@ -40,7 +40,9 @@ function SegundaPagina({ user }) {
     }
   }, [user, navigate]);
 
-  const qrActual = codigos[indexActual];
+  
+  const qrActual = user?.apartmentNumber ? `${user.apartmentNumber}|${codigos[indexActual]}` : '';
+
 
   const manejarVolver = () => {
     const nuevoIndex = indexActual + 1;
