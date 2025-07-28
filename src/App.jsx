@@ -141,7 +141,7 @@ function AppContent({
 useEffect(() => {
   const fetchTemporizador = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/realtime/${apartmentNumber}`);
+      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
       const data = await res.json();
 
       if (data.success && data.data && data.data.temporizadorPrincipal !== null) {
@@ -258,7 +258,7 @@ useEffect(() => {
       const parsedTime = parseInt(timeLeft, 10);
 
       try {
-        const res = await fetch('https://backend-1uwd.onrender.com/api/realTime/temporizador', {
+        const res = await fetch('http://localhost:4000/api/realtime/temporizador', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
