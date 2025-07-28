@@ -12,7 +12,7 @@ function Register({ onRegister, goToLogin }) {
     setError('');
 
     try {
-      const res = await fetch('https://backend-1uwd.onrender.com', {
+      const res = await fetch('https://backend-1uwd.onrender.com/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, apartmentNumber })
