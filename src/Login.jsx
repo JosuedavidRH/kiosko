@@ -13,7 +13,7 @@ function Login({ onLogin, goToRegister }) {
 
     try {
       // conexión local para desarrollo
-      const res = await fetch('http://localhost:5000/api/login', {
+      const res = await fetch('https://backend-1uwd.onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
