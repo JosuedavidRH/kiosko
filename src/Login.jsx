@@ -1,3 +1,5 @@
+//CODIGO en produccion 
+
 import React, { useState } from 'react';
 import fondo from './assets/fondo.jpg'; // imagen de fondo
 import kiosko from './assets/kiosko.jpg'; // logo que quieres arriba del formulario

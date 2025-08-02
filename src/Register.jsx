@@ -1,3 +1,5 @@
+//CODIGO en produccion 
+
 import React, { useState } from 'react';
 import fondo from './assets/fondo.jpg'; // imagen de fondo
 
