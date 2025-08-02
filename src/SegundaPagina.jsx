@@ -1,3 +1,5 @@
+//CODIGO en produccion 
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
