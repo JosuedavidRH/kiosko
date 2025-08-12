@@ -48,8 +48,10 @@ function TemporizadorPrincipal({ start, initialTime = 12 * 60 * 60, onGuardarTie
   }
 
   return (
-    <div style={{ margin: '20px', fontSize: '1.2rem' }}>
-      Tiempo restante: {formatTime(timeLeft)} {!start && <span>(pausado)</span>}
+     <div style={{ margin: '20px', fontSize: '1.2rem' }}>
+    <span style={{ fontSize: '0.8rem', color: 'white' }}>
+        TIENES 12 HORAS PARA PAGAR: 
+      </span>  {formatTime(timeLeft)} {!start && <span></span>}
     </div>
   );
 }

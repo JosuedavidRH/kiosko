@@ -11,6 +11,7 @@ import TemporizadorFactura3 from './TemporizadorFactura3';
 import SegundaPagina from './SegundaPagina.jsx';
 import { FaClock } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
+import { guardarStatusActual } from "./utils/guardarStatusActual";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -105,6 +106,7 @@ useEffect(() => {
   onRegister={({ username, apartmentNumber }) => {
     setUser(username);
     setApartmentNumber(apartmentNumber);
+    localStorage.setItem('apartmentNumber', apartmentNumber); // <--- agregar en registrar usuario
   }}
   goToLogin={() => setIsRegistering(false)} 
 />
@@ -114,6 +116,7 @@ useEffect(() => {
   onLogin={({ username, apartmentNumber }) => {
     setUser(username);
     setApartmentNumber(apartmentNumber);
+    localStorage.setItem('apartmentNumber', apartmentNumber);// <--- agregar en login usuario
   }}
   goToRegister={() => setIsRegistering(true)}
 />
@@ -140,39 +143,75 @@ function AppContent({
   const [initialTime, setInitialTime] = useState(12 * 60 * 60); 
   const [temporizadorListo, setTemporizadorListo] = useState(false); // 👈 nueva bandera
 
+// 🕒 Recuperar temporizador + statusActual al iniciar sesión
 useEffect(() => {
-  const fetchTemporizador = async () => {
+  const fetchDatosIniciales = async () => {
     try {
-      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
+      const res = await fetch(`http://localhost:4000/api/realtime/${apartmentNumber}`);
       const data = await res.json();
 
-      if (data.success && data.data && data.data.temporizadorPrincipal !== null) {
-        const tiempoGuardado = parseInt(data.data.temporizadorPrincipal, 10);
-        const horaCierre = new Date(data.data.updated_at).getTime();
+      if (!data.success || !data.data) {
+        console.warn("⚠️ No hay datos previos, usando valores por defecto.");
+        localStorage.clear();
+        setInitialTime(12 * 60 * 60);
+        setTimerStarted(false);
+        setTemporizadorListo(true);
+        setTemporizadorActivo(false);
+        setClickCount(0);
+        localStorage.setItem('clickCount', 0);
+        return;
+      }
+
+      const { temporizadorPrincipal, updated_at, statusActual } = data.data;
+
+      // ---------- 🎯 Restaurar estado del botón principal ----------
+      let statusNum = 0;
+      if (statusActual !== undefined && statusActual !== null) {
+        statusNum = Number(statusActual);
+        setClickCount(statusNum);
+        localStorage.setItem('clickCount', statusNum);
+        console.log(`✅ statusActual cargado: ${statusNum}`);
+      } else {
+        console.warn('⚠️ No se encontró statusActual, usando 0 por defecto.');
+        setClickCount(0);
+        localStorage.setItem('clickCount', 0);
+      }
+
+      // ---------- ⏱ Restaurar temporizador solo si clickCount !== 0 ----------
+      if (statusNum !== 0 && temporizadorPrincipal !== null) {
+        const tiempoGuardado = parseInt(temporizadorPrincipal, 10);
+        const horaCierre = new Date(updated_at).getTime();
         const horaActual = Date.now();
         const tiempoTranscurrido = Math.floor((horaActual - horaCierre) / 1000);
         const tiempoRestante = tiempoGuardado - tiempoTranscurrido;
 
         if (!isNaN(tiempoRestante) && tiempoRestante > 0) {
           console.log("⏳ Restaurando con tiempo restante:", tiempoRestante);
-          localStorage.setItem("Restaurando temporizador", tiempoRestante.toString());
+          localStorage.setItem("timeLeftPrincipal", tiempoRestante.toString());
           setInitialTime(tiempoRestante);
           setTimerStarted(true);
           setTemporizadorListo(true);
           setTemporizadorActivo(true);
-          return;
+        } else {
+          console.log("🆕 Tiempo inválido o agotado. Reiniciando temporizador.");
+          localStorage.setItem('timeLeftPrincipal', (12 * 60 * 60).toString());
+          setInitialTime(12 * 60 * 60);
+          setTimerStarted(false);
+          setTemporizadorListo(true);
+          setTemporizadorActivo(false);
         }
+      } else if (statusNum === 0) {
+        // Si clickCount es 0, reiniciar y pausar temporizador
+        console.log("🔄 clickCount es 0, reiniciando y pausando temporizador");
+        localStorage.setItem('timeLeftPrincipal', (12 * 60 * 60).toString());
+        setInitialTime(12 * 60 * 60);
+        setTimerStarted(false);
+        setTemporizadorListo(true);
+        setTemporizadorActivo(false);
       }
-
-      // ⚠️ Usuario sin datos válidos: limpiar todo
-      console.log("🆕 Usuario nuevo o sin datos válidos. Reiniciando temporizador.");
-      localStorage.clear();
-      setInitialTime(12 * 60 * 60);     // 12 horas por defecto
-      setTimerStarted(false);           // empieza en pausa
-      setTemporizadorListo(true);       // permitir mostrar el componente
-      setTemporizadorActivo(false);
+      
     } catch (error) {
-      console.error("❌ Error al obtener temporizador:", error);
+      console.error("❌ Error al obtener datos iniciales:", error);
       setInitialTime(12 * 60 * 60);
       setTimerStarted(false);
       setTemporizadorListo(true);
@@ -181,18 +220,17 @@ useEffect(() => {
   };
 
   if (apartmentNumber) {
-    fetchTemporizador();
+    fetchDatosIniciales();
   }
 }, [apartmentNumber]);
 
+// 📌 Lógica para activar temporizador cuando clickCount === 1
 useEffect(() => {
   if (clickCount === 1 && !timerStarted) {
     console.log('✅ Activando temporizador por botón principal...');
     setTimerStarted(true);
   }
 }, [clickCount, timerStarted]);
-
-
 
 
  
@@ -230,91 +268,9 @@ useEffect(() => {
 
 
 
-
-
 {/* Aquí puedes volver a poner tus temporizadores,botones, headers, etc si quieres */}
 
-
-{/* header contenedor del boton cerrar */}
-
-<header style={{
-    display: 'flex',
-    justifyContent: 'center',
-    transform: 'translateY(485px)',  // sube el container
-    marginLeft: '-240px'            // mueve todo el header a la derecha
-  }}>
-    <div style={{
-      backgroundColor: 'transparent',
-      width: '110px',
-      height: '60px',
-      borderRadius: '12px',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-
-{timerStarted && (
-  <>
-    <button
-  onClick={async () => {
-    const timeLeft = localStorage.getItem('timeLeftPrincipal');
-    if (timeLeft) {
-      const parsedTime = parseInt(timeLeft, 10);
-
-      try {
-        const res = await fetch('https://backend-1uwd.onrender.com/api/realTime/temporizador', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: apartmentNumber,
-            temporizadorPrincipal: parsedTime,
-          }),
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          alert('⏱ Tiempo guardado con éxito');
-        } else {
-          console.error('❌ Error en respuesta:', data.message);
-        }
-      } catch (error) {
-        console.error('❌ Error al conectar con realTime.js:', error);
-      }
-    } else {
-      console.warn('⏱ No hay tiempo guardado en localStorage');
-    }
-
-    // 🔥 Cerrar sesión
-    localStorage.clear();
-    window.location.reload();
-  }}
-  style={{
-    alignSelf: 'center',
-    marginTop: '35px',
-    marginLeft: '-40px',
-    padding: '6px 6px',
-    fontSize: '0.9rem',
-    borderRadius: '5px',
-    backgroundColor: '#f44336',
-    color: 'white',
-    border: 'none',
-    cursor: 'pointer'
-  }}
->
-  Cerrar 🔒
-</button>
-
-  </>
-)}
-
-</div>
-  </header>
-
-
-
-          
-          
+                   
 {/* header con contenedor del icono */}
 {clickCount >= 1 && (
   <header style={{
@@ -576,92 +532,208 @@ useEffect(() => {
 <footer style={{
   display: 'flex',
   justifyContent: 'center',
-  transform: 'translateY(-210px)'
+  transform: 'translateY(-240px)'
+
 }}>
   <div style={{
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    width: '200px',
-    height: '120px',
-    borderRadius: '12px',
+    backgroundColor: 'transparent',
+    width: '250px',
+    height: '70px',
+    marginTop: '90px',
+    marginLeft: '100px',
+    borderRadius: '100px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center'
   }}>
-    <button
-      disabled={clickCount === 3 || isProcessing}
-      onClick={async () => {
-        setIsProcessing(true);
+   <button
+  disabled={clickCount === 3 || isProcessing}
+  onClick={async () => {
+    setIsProcessing(true);
 
-        if (clickCount === 0) {
-          try {
-            // ✅ Generar 3 códigos aleatorios
-            const nuevosCodigos = Array.from({ length: 3 }, () =>
-              Math.floor(100000 + Math.random() * 900000).toString()
-            );
+    if (clickCount === 0) {
+      try {
 
-            // ✅ Guardar en localStorage
-            localStorage.setItem('codigos', JSON.stringify(nuevosCodigos));
-            localStorage.setItem('indexActual', '0');
 
-            // ✅ Enviar a la BD
-            for (const codigo of nuevosCodigos) {
-              const payload = {
-                numero_apto: apartmentNumber,
-                codigo_generado: codigo
-              };
+        // ✅ Generar 3 códigos aleatorios
+        const nuevosCodigos = Array.from({ length: 3 }, () =>
+          Math.floor(100000 + Math.random() * 900000).toString()
+        );
 
-              console.log('📤 Enviando a guardar_numero:', payload);
+        // ✅ Guardar en localStorage
+        localStorage.setItem('codigos', JSON.stringify(nuevosCodigos));
+        localStorage.setItem('indexActual', '0');
 
-              await fetch('https://backend-1uwd.onrender.com/api/guardar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              });
-            }
+        // ✅ Enviar a la BD
+        for (const codigo of nuevosCodigos) {
+          const payload = {
+            numero_apto: apartmentNumber,
+            codigo_generado: codigo
+          };
 
-            // ✅ Avanzar click count y redirigir
-            setClickCount(prev => (prev + 1) % 4);
-            navigate('/segunda');
+          console.log('📤 Enviando a guardar_numero:', payload);
 
-          } catch (error) {
-            console.error('❌ Error general al generar y guardar códigos:', error);
-          }
-
-        } else if (clickCount === 1 || clickCount === 2) {
-          setClickCount(prev => (prev + 1) % 4);
-          navigate('/segunda');
-        } else {
-          setClickCount(prev => (prev + 1) % 4);
+          await fetch('http://localhost:3001/guardar_numero', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
         }
 
-        setIsProcessing(false);
-      }}
-      style={{
-        width: '140px',
-        height: '140px',
-        borderRadius: '50%',
-        fontSize: '0.8rem',
-        backgroundColor:
-          clickCount === 1 ? '#59ff33' :
-          clickCount === 2 ? '#eea82b' :
-          clickCount === 3 ? '#fd531e' :
-          '#ff0',
-        color: '#000',
-        border: 'none',
-        cursor: clickCount === 3 || isProcessing ? 'not-allowed' : 'pointer',
-        opacity: clickCount === 3 || isProcessing ? 0.6 : 1,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
-    >
-      {clickCount === 0 && 'generar QR'}
-      {clickCount === 1 && 'TIENES 2 COMPRAS MAS'}
-      {clickCount === 2 && 'TIENES 1 COMPRA MAS'}
-      {clickCount === 3 && 'YA NO TIENES MAS COMPRAS'}
-    </button>
-  </div>
+        // ✅ Avanzar click count, guardar en backend y redirigir
+        const nuevoEstado = (clickCount + 1) % 4;
+        setClickCount(nuevoEstado);
+        guardarStatusActual(nuevoEstado, apartmentNumber);
+        navigate('/segunda');
+
+      } catch (error) {
+        console.error('❌ Error general al generar y guardar códigos:', error);
+      }
+
+    } else if (clickCount === 1 || clickCount === 2) {
+      const nuevoEstado = (clickCount + 1) % 4;
+      setClickCount(nuevoEstado);
+      guardarStatusActual(nuevoEstado, apartmentNumber);
+      navigate('/segunda');
+
+    } else {
+      const nuevoEstado = (clickCount + 1) % 4;
+      setClickCount(nuevoEstado);
+      guardarStatusActual(nuevoEstado, apartmentNumber);
+    }
+
+    setIsProcessing(false);
+  }}
+  style={{
+    width: '140px',
+    height: '140px',
+    borderRadius: '50%',
+    fontSize: '0.8rem',
+    backgroundColor:
+      clickCount === 1 ? '#59ff33' :
+      clickCount === 2 ? '#eea82b' :
+      clickCount === 3 ? '#fd531e' :
+      '#ff0',
+    color: '#000',
+    border: 'none',
+    cursor: clickCount === 3 || isProcessing ? 'not-allowed' : 'pointer',
+    opacity: clickCount === 3 || isProcessing ? 0.6 : 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  }}
+>
+  {clickCount === 0 && 'generar QR'}
+  {clickCount === 1 && 'TIENES 2 COMPRAS MAS'}
+  {clickCount === 2 && 'TIENES 1 COMPRA MAS'}
+  {clickCount === 3 && 'YA NO TIENES MAS COMPRAS'}
+</button>
+
+
+
+    <div style={{
+      backgroundColor: 'transparent',
+      width: '110px',
+      height: '60px',
+      borderRadius: '12px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+
+{timerStarted && (
+  <>
+  <button
+  onClick={async () => {
+    const timeLeft = localStorage.getItem('timeLeftPrincipal');
+    const apartmentNumber = localStorage.getItem('apartmentNumber');
+    const clickCount = localStorage.getItem('clickCount');
+
+    if (!apartmentNumber) {
+      console.warn('⚠️ No se encontró apartmentNumber en localStorage');
+      return;
+    }
+
+    try {
+      if (timeLeft) {
+        const parsedTime = parseInt(timeLeft, 10);
+        console.log('Guardando temporizador:', parsedTime, 'para apartamento:', apartmentNumber);
+
+        const resTimer = await fetch('http://localhost:4000/api/realtime/temporizador', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          // Usar userId para mantener consistencia con el backend viejo
+          body: JSON.stringify({
+            userId: apartmentNumber,
+            temporizadorPrincipal: parsedTime,
+          }),
+        });
+
+        const dataTimer = await resTimer.json();
+        if (dataTimer.success) {
+          console.log('⏱ Tiempo guardado con éxito');
+        } else {
+          console.error('❌ Error guardando tiempo:', dataTimer.message || 'Sin mensaje');
+        }
+      } else {
+        console.warn('⏱ No hay tiempo guardado en localStorage');
+      }
+
+      if (clickCount !== null) {
+        console.log('Guardando statusActual:', Number(clickCount));
+
+        const resStatus = await fetch('http://localhost:4000/api/statusActual', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            apartmentNumber,
+            statusActual: Number(clickCount) || 0,
+          }),
+        });
+
+        const dataStatus = await resStatus.json();
+        if (dataStatus.success) {
+          console.log('🎯 StatusActual guardado con éxito');
+        } else {
+          console.error('❌ Error guardando statusActual:', dataStatus.message || 'Sin mensaje');
+        }
+      }
+
+      // Limpiar y recargar con pequeño delay
+      setTimeout(() => {
+        localStorage.clear();
+        window.location.reload();
+      }, 200);
+
+    } catch (error) {
+      console.error('❌ Error al guardar datos antes de cerrar sesión:', error);
+    }
+  }}
+  style={{
+    alignSelf: 'center',
+    marginTop: '190px',
+    marginLeft: '-250px',
+    padding: '6px 6px',
+    fontSize: '0.9rem',
+    borderRadius: '5px',
+    backgroundColor: '#f44336',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+  }}
+
+>
+  Cerrar 🔒
+</button>
+
+  </>
+)}
+
+</div>
+ </div>
 </footer>
+
 
 
 
