@@ -147,7 +147,7 @@ function AppContent({
 useEffect(() => {
   const fetchDatosIniciales = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/realtime/${apartmentNumber}`);
+      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
       const data = await res.json();
 
       if (!data.success || !data.data) {
@@ -573,7 +573,7 @@ useEffect(() => {
 
           console.log('📤 Enviando a guardar_numero:', payload);
 
-          await fetch('http://localhost:3001/guardar_numero', {
+          await fetch('https://backend-1uwd.onrender.com/api/guardar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -660,7 +660,7 @@ useEffect(() => {
         const parsedTime = parseInt(timeLeft, 10);
         console.log('Guardando temporizador:', parsedTime, 'para apartamento:', apartmentNumber);
 
-        const resTimer = await fetch('http://localhost:4000/api/realtime/temporizador', {
+        const resTimer = await fetch('https://backend-1uwd.onrender.com/api/realTime/temporizador', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           // Usar userId para mantener consistencia con el backend viejo
@@ -683,7 +683,7 @@ useEffect(() => {
       if (clickCount !== null) {
         console.log('Guardando statusActual:', Number(clickCount));
 
-        const resStatus = await fetch('http://localhost:4000/api/statusActual', {
+        const resStatus = await fetch('https://backend-1uwd.onrender.com/api/realTime/statusActual', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
