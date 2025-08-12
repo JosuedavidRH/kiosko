@@ -702,7 +702,7 @@ useEffect(() => {
 
       // Limpiar y recargar con pequeño delay
       setTimeout(() => {
-        localStorage.clear();
+        //localStorage.clear();
         window.location.reload();
       }, 200);
 
