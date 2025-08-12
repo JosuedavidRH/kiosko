@@ -644,11 +644,12 @@ useEffect(() => {
 
 {timerStarted && (
   <>
-  <button
+ <button
   onClick={async () => {
     const timeLeft = localStorage.getItem('timeLeftPrincipal');
     const apartmentNumber = localStorage.getItem('apartmentNumber');
     const clickCount = localStorage.getItem('clickCount');
+    const API_URL = 'https://backend-1uwd.onrender.com/api/realTime';
 
     if (!apartmentNumber) {
       console.warn('⚠️ No se encontró apartmentNumber en localStorage');
@@ -656,14 +657,19 @@ useEffect(() => {
     }
 
     try {
+      // 🔹 Calentar el servidor (evita ERR_CONNECTION_CLOSED en Render free)
+      await fetch(`${API_URL}/ping`).catch(() =>
+        console.warn('⚠️ No se pudo "despertar" el backend antes de guardar')
+      );
+
+      // Guardar temporizador si existe
       if (timeLeft) {
         const parsedTime = parseInt(timeLeft, 10);
         console.log('Guardando temporizador:', parsedTime, 'para apartamento:', apartmentNumber);
 
-        const resTimer = await fetch('https://backend-1uwd.onrender.com/api/realTime/temporizador', {
+        const resTimer = await fetch(`${API_URL}/temporizador`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // Usar userId para mantener consistencia con el backend viejo
           body: JSON.stringify({
             userId: apartmentNumber,
             temporizadorPrincipal: parsedTime,
@@ -680,14 +686,15 @@ useEffect(() => {
         console.warn('⏱ No hay tiempo guardado en localStorage');
       }
 
+      // Guardar statusActual si existe
       if (clickCount !== null) {
         console.log('Guardando statusActual:', Number(clickCount));
 
-        const resStatus = await fetch('https://backend-1uwd.onrender.com/api/realTime/statusActual', {
+        const resStatus = await fetch(`${API_URL}/statusActual`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            apartmentNumber,
+            userId: apartmentNumber, // 🔹 Consistencia: siempre userId
             statusActual: Number(clickCount) || 0,
           }),
         });
@@ -722,10 +729,10 @@ useEffect(() => {
     border: 'none',
     cursor: 'pointer',
   }}
-
 >
   Cerrar 🔒
 </button>
+
 
   </>
 )}
