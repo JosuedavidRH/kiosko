@@ -143,11 +143,10 @@ function AppContent({
   const [initialTime, setInitialTime] = useState(12 * 60 * 60); 
   const [temporizadorListo, setTemporizadorListo] = useState(false); // 👈 nueva bandera
 
-// 🕒 Recuperar temporizador + statusActual al iniciar sesión
-useEffect(() => {
-  const fetchDatosIniciales = async () => {
+ useEffect(() => {
+  const fetchDatosIniciales = async (aptParam) => {
     try {
-      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
+      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${aptParam}`);
       const data = await res.json();
 
       if (!data.success || !data.data) {
@@ -164,7 +163,7 @@ useEffect(() => {
 
       const { temporizadorPrincipal, updated_at, statusActual } = data.data;
 
-      // ---------- 🎯 Restaurar estado del botón principal ----------
+      // 🎯 Restaurar estado del botón principal
       let statusNum = 0;
       if (statusActual !== undefined && statusActual !== null) {
         statusNum = Number(statusActual);
@@ -177,7 +176,7 @@ useEffect(() => {
         localStorage.setItem('clickCount', 0);
       }
 
-      // ---------- ⏱ Restaurar temporizador solo si clickCount !== 0 ----------
+      // ⏱ Restaurar temporizador solo si clickCount !== 0
       if (statusNum !== 0 && temporizadorPrincipal !== null) {
         const tiempoGuardado = parseInt(temporizadorPrincipal, 10);
         const horaCierre = new Date(updated_at).getTime();
@@ -208,7 +207,6 @@ useEffect(() => {
         setTemporizadorListo(true);
         setTemporizadorActivo(false);
       }
-      
     } catch (error) {
       console.error("❌ Error al obtener datos iniciales:", error);
       setInitialTime(12 * 60 * 60);
@@ -231,17 +229,6 @@ useEffect(() => {
   fetchDatosIniciales(apt);
 }, [apartmentNumber]);
 
-
-// 📌 Lógica para activar temporizador cuando clickCount === 1
-useEffect(() => {
-  if (clickCount === 1 && !timerStarted) {
-    console.log('✅ Activando temporizador por botón principal...');
-    setTimerStarted(true);
-  }
-}, [clickCount, timerStarted]);
-
-
- 
   return (
     <Routes>
 
