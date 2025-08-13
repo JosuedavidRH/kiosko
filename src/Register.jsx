@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import fondo from './assets/fondo.jpg'; // imagen de fondo
+import kiosko from './assets/kiosko.jpg'; // logo
 
 function Register({ onRegister, goToLogin }) {
   const [username, setUsername] = useState('');
@@ -21,16 +22,11 @@ function Register({ onRegister, goToLogin }) {
       const data = await res.json();
 
       if (data.success) {
-        // Guardar directamente en localStorage antes de cambiar de vista
-        localStorage.setItem('apartmentNumber', data.apartmentNumber);
-
-        // Mantener tu lógica original
+        console.log("Registro exitoso:", data);
+        // ✅ Pasar datos a App.jsx para que los guarde en estado y localStorage
         onRegister({ username: data.username, apartmentNumber: data.apartmentNumber });
-        
-        // Cambiar a login
-        goToLogin();
       } else {
-        setError(data.message || 'No se pudo registrar');
+        setError(data.message || 'Error al registrar el usuario');
       }
     } catch (err) {
       setError('Error de conexión con el servidor');
@@ -39,13 +35,15 @@ function Register({ onRegister, goToLogin }) {
 
   return (
     <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      width: '100%',
       backgroundImage: `url(${fondo})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
-      minHeight: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center'
+      backgroundRepeat: 'no-repeat'
     }}>
       <div style={{
         display: 'flex',
@@ -58,11 +56,24 @@ function Register({ onRegister, goToLogin }) {
         width: 'min(90%, 300px)',
         boxSizing: 'border-box'
       }}>
+        {/* Logo kiosko */}
+        <img 
+          src={kiosko} 
+          alt="Kiosko logo"
+          style={{
+            width: '290px',
+            height: '130px',
+            objectFit: 'cover',
+            borderRadius: '110%',
+            marginBottom: '20px'
+          }}
+        />
+
         <h2 style={{
           margin: '0 0 10px 0',
-          fontSize: 'clamp(1.2rem, 4vw, 1.8rem)',
-          color: '#fff'
+          fontSize: 'clamp(1.2rem, 4vw, 1.8rem)'
         }}>Registrarse</h2>
+
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
@@ -115,9 +126,11 @@ function Register({ onRegister, goToLogin }) {
             fontSize: '1rem',
             cursor: 'pointer'
           }}>
-            Registrar
+            Registrarse
           </button>
         </form>
+
+        {/* Botón para volver a login */}
         <button onClick={goToLogin} style={{
           marginTop: '10px',
           background: 'none',
@@ -126,8 +139,9 @@ function Register({ onRegister, goToLogin }) {
           cursor: 'pointer',
           textDecoration: 'underline'
         }}>
-          Volver al Login
+          Volver a iniciar sesión
         </button>
+
         {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
       </div>
     </div>
