@@ -143,10 +143,11 @@ function AppContent({
   const [initialTime, setInitialTime] = useState(12 * 60 * 60); 
   const [temporizadorListo, setTemporizadorListo] = useState(false); // 👈 nueva bandera
 
- useEffect(() => {
-  const fetchDatosIniciales = async (aptParam) => {
+// 🕒 Recuperar temporizador + statusActual al iniciar sesión
+useEffect(() => {
+  const fetchDatosIniciales = async () => {
     try {
-      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${aptParam}`);
+      const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
       const data = await res.json();
 
       if (!data.success || !data.data) {
@@ -163,7 +164,7 @@ function AppContent({
 
       const { temporizadorPrincipal, updated_at, statusActual } = data.data;
 
-      // 🎯 Restaurar estado del botón principal
+      // ---------- 🎯 Restaurar estado del botón principal ----------
       let statusNum = 0;
       if (statusActual !== undefined && statusActual !== null) {
         statusNum = Number(statusActual);
@@ -176,7 +177,7 @@ function AppContent({
         localStorage.setItem('clickCount', 0);
       }
 
-      // ⏱ Restaurar temporizador solo si clickCount !== 0
+      // ---------- ⏱ Restaurar temporizador solo si clickCount !== 0 ----------
       if (statusNum !== 0 && temporizadorPrincipal !== null) {
         const tiempoGuardado = parseInt(temporizadorPrincipal, 10);
         const horaCierre = new Date(updated_at).getTime();
@@ -207,6 +208,7 @@ function AppContent({
         setTemporizadorListo(true);
         setTemporizadorActivo(false);
       }
+      
     } catch (error) {
       console.error("❌ Error al obtener datos iniciales:", error);
       setInitialTime(12 * 60 * 60);
@@ -229,6 +231,17 @@ function AppContent({
   fetchDatosIniciales(apt);
 }, [apartmentNumber]);
 
+
+// 📌 Lógica para activar temporizador cuando clickCount === 1
+useEffect(() => {
+  if (clickCount === 1 && !timerStarted) {
+    console.log('✅ Activando temporizador por botón principal...');
+    setTimerStarted(true);
+  }
+}, [clickCount, timerStarted]);
+
+
+ 
   return (
     <Routes>
 
