@@ -12,12 +12,6 @@ function Register({ onRegister, goToLogin }) {
     e.preventDefault();
     setError('');
 
-    // ✅ Validar campos vacíos
-    if (!username.trim() || !password.trim() || !apartmentNumber.trim()) {
-      setError('Todos los campos son obligatorios');
-      return;
-    }
-
     try {
       const res = await fetch('https://backend-1uwd.onrender.com/api/register', {
         method: 'POST',
@@ -28,38 +22,30 @@ function Register({ onRegister, goToLogin }) {
       const data = await res.json();
 
       if (data.success) {
-        console.log("✅ Registro exitoso:", data);
+        // Guardar en localStorage
+        localStorage.setItem('apartmentNumber', data.apartmentNumber);
+        console.log("📦 apartmentNumber guardado en localStorage:", localStorage.getItem('apartmentNumber'));
 
-        // ✅ Usar el apartmentNumber y username del backend si existen, si no, usar los del formulario
-        const aptNum = data.apartmentNumber || apartmentNumber;
-        const userNameFinal = data.username || username;
-
-        // ✅ Guardar en localStorage antes de pasar a App.jsx
-        localStorage.setItem('username', userNameFinal);
-        localStorage.setItem('apartmentNumber', aptNum);
-
-        // ✅ Llamar a App.jsx con datos correctos
-        onRegister({ username: userNameFinal, apartmentNumber: aptNum });
+        // Continuar flujo normal
+        onRegister({ username: data.username, apartmentNumber: data.apartmentNumber });
+        goToLogin();
       } else {
-        setError(data.message || 'Error al registrar el usuario');
+        setError(data.message || 'No se pudo registrar');
       }
     } catch (err) {
-      console.error('❌ Error de conexión:', err);
       setError('Error de conexión con el servidor');
     }
   };
 
   return (
     <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      width: '100%',
       backgroundImage: `url(${fondo})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
     }}>
       <div style={{
         display: 'flex',
@@ -72,24 +58,11 @@ function Register({ onRegister, goToLogin }) {
         width: 'min(90%, 300px)',
         boxSizing: 'border-box'
       }}>
-        {/* Logo kiosko */}
-        <img 
-          src={kiosko} 
-          alt="Kiosko logo"
-          style={{
-            width: '290px',
-            height: '130px',
-            objectFit: 'cover',
-            borderRadius: '110%',
-            marginBottom: '20px'
-          }}
-        />
-
         <h2 style={{
           margin: '0 0 10px 0',
-          fontSize: 'clamp(1.2rem, 4vw, 1.8rem)'
+          fontSize: 'clamp(1.2rem, 4vw, 1.8rem)',
+          color: '#fff'
         }}>Registrarse</h2>
-
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
@@ -142,11 +115,9 @@ function Register({ onRegister, goToLogin }) {
             fontSize: '1rem',
             cursor: 'pointer'
           }}>
-            Registrarse
+            Registrar
           </button>
         </form>
-
-        {/* Botón para volver a login */}
         <button onClick={goToLogin} style={{
           marginTop: '10px',
           background: 'none',
@@ -155,9 +126,8 @@ function Register({ onRegister, goToLogin }) {
           cursor: 'pointer',
           textDecoration: 'underline'
         }}>
-          Volver a iniciar sesión
+          Volver al Login
         </button>
-
         {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
       </div>
     </div>

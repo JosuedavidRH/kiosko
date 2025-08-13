@@ -101,24 +101,38 @@ useEffect(() => {
   isProcessing={isProcessing}          // ✅
   setIsProcessing={setIsProcessing}    // ✅
 />
-  ) : isRegistering ? (
-    <Register 
-  onRegister={({ username, apartmentNumber }) => {
-    setUser(username);
-    setApartmentNumber(apartmentNumber);
-    localStorage.setItem('apartmentNumber', apartmentNumber); // <--- agregar en registrar usuario
-  }}
-  goToLogin={() => setIsRegistering(false)} 
-/>
+ ) : isRegistering ? (
+  <Register 
+    onRegister={({ username, apartmentNumber }) => {
+      console.log("onRegister -> username:", username, "apartmentNumber:", apartmentNumber); // ✅ log
 
-  ) : (
-    <Login
-  onLogin={({ username, apartmentNumber }) => {
-    setUser(username);
-    setApartmentNumber(apartmentNumber);
-    localStorage.setItem('apartmentNumber', apartmentNumber);// <--- agregar en login usuario
-  }}
-  goToRegister={() => setIsRegistering(true)}
+      setUser(username);
+      setApartmentNumber(apartmentNumber);
+      localStorage.setItem('apartmentNumber', apartmentNumber);
+
+      // ✅ Verificación inmediata
+      console.log("localStorage después de onRegister:", localStorage.getItem('apartmentNumber'));
+
+      // ✅ Ejecutar fetchDatosIniciales inmediatamente para usuario nuevo
+      fetchDatosIniciales(apartmentNumber);
+    }}
+    goToLogin={() => setIsRegistering(false)} 
+  />
+) : (
+  <Login
+    onLogin={({ username, apartmentNumber }) => {
+      console.log("onLogin -> username:", username, "apartmentNumber:", apartmentNumber); // ✅ log
+
+      setUser(username);
+      setApartmentNumber(apartmentNumber);
+      localStorage.setItem('apartmentNumber', apartmentNumber);
+
+      // ✅ Verificación inmediata
+      console.log("localStorage después de onLogin:", localStorage.getItem('apartmentNumber'));
+      
+      // ✅ No es necesario llamar fetchDatosIniciales aquí porque el useEffect se encargará
+    }}
+    goToRegister={() => setIsRegistering(true)} 
 />
 
 
@@ -150,17 +164,35 @@ useEffect(() => {
       const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
       const data = await res.json();
 
+      
       if (!data.success || !data.data) {
-        console.warn("⚠️ No hay datos previos, usando valores por defecto.");
-        localStorage.clear();
-        setInitialTime(12 * 60 * 60);
-        setTimerStarted(false);
-        setTemporizadorListo(true);
-        setTemporizadorActivo(false);
-        setClickCount(0);
-        localStorage.setItem('clickCount', 0);
-        return;
-      }
+  console.warn("⚠️ No hay datos previos, usando valores por defecto.");
+
+  // 🔹 Borrar solo las claves específicas, sin tocar apartmentNumber
+  const keysToRemove = [
+    'clicked',
+    'codigos',
+    'factura1Terminada',
+    'factura2Terminada',
+    'factura3Terminada',
+    'indexActual',
+    'timeLeftFactura1',
+    'timeLeftPrincipal',
+    'timerStarted'
+  ];
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+
+  // 🔹 Inicializar valores por defecto
+  setInitialTime(12 * 60 * 60);
+  setTimerStarted(false);
+  setTemporizadorListo(true);
+  setTemporizadorActivo(false);
+  setClickCount(0);
+  localStorage.setItem('clickCount', 0);
+
+  return;
+}
+
 
       const { temporizadorPrincipal, updated_at, statusActual } = data.data;
 
