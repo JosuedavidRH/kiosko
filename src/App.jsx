@@ -201,7 +201,6 @@ useEffect(() => {
           setTemporizadorActivo(false);
         }
       } else if (statusNum === 0) {
-        // Si clickCount es 0, reiniciar y pausar temporizador
         console.log("🔄 clickCount es 0, reiniciando y pausando temporizador");
         localStorage.setItem('timeLeftPrincipal', (12 * 60 * 60).toString());
         setInitialTime(12 * 60 * 60);
@@ -219,10 +218,19 @@ useEffect(() => {
     }
   };
 
-  if (apartmentNumber) {
-    fetchDatosIniciales();
+  // 🔍 Recuperar apartmentNumber si no está en el state
+  let apt = apartmentNumber;
+  if (!apt) {
+    apt = localStorage.getItem("apartmentNumber");
+    if (!apt) {
+      console.warn("⚠️ No se encontró apartmentNumber en localStorage");
+      return; // No seguimos si no hay apartmentNumber
+    }
   }
+
+  fetchDatosIniciales(apt);
 }, [apartmentNumber]);
+
 
 // 📌 Lógica para activar temporizador cuando clickCount === 1
 useEffect(() => {
