@@ -108,7 +108,7 @@ useEffect(() => {
     setApartmentNumber(apartmentNumber);
     localStorage.setItem('apartmentNumber', apartmentNumber); // <--- agregar en registrar usuario
   }}
-  goToLogin={() => setIsRegistering(false)} 
+  goToLogin={() => setIsRegistering(true)} 
 />
 
   ) : (
