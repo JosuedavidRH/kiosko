@@ -14,7 +14,7 @@ function Login({ onLogin, goToRegister }) {
     setError('');
 
     try {
-      // conexión local para desarrollo
+      
       const res = await fetch('https://backend-1uwd.onrender.com/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
