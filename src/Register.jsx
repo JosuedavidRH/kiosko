@@ -1,5 +1,3 @@
-//CODIGO en produccion 
-
 import React, { useState } from 'react';
 import fondo from './assets/fondo.jpg'; // imagen de fondo
 
@@ -23,7 +21,13 @@ function Register({ onRegister, goToLogin }) {
       const data = await res.json();
 
       if (data.success) {
+        // Guardar directamente en localStorage antes de cambiar de vista
+        localStorage.setItem('apartmentNumber', data.apartmentNumber);
+
+        // Mantener tu lógica original
         onRegister({ username: data.username, apartmentNumber: data.apartmentNumber });
+        
+        // Cambiar a login
         goToLogin();
       } else {
         setError(data.message || 'No se pudo registrar');
