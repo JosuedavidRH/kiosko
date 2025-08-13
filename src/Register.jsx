@@ -12,6 +12,12 @@ function Register({ onRegister, goToLogin }) {
     e.preventDefault();
     setError('');
 
+    // ✅ Validar campos vacíos
+    if (!username.trim() || !password.trim() || !apartmentNumber.trim()) {
+      setError('Todos los campos son obligatorios');
+      return;
+    }
+
     try {
       const res = await fetch('https://backend-1uwd.onrender.com/api/register', {
         method: 'POST',
@@ -22,21 +28,23 @@ function Register({ onRegister, goToLogin }) {
       const data = await res.json();
 
       if (data.success) {
-        console.log("Registro exitoso:", data);
+        console.log("✅ Registro exitoso:", data);
 
-        // ✅ Usar el apartmentNumber del backend o el que el usuario ingresó
+        // ✅ Usar el apartmentNumber del backend o el ingresado por el usuario
         const aptNum = data.apartmentNumber || apartmentNumber;
+        const userNameFinal = data.username || username;
 
         // ✅ Guardar en localStorage antes de pasar a App.jsx
-        localStorage.setItem('username', data.username);
+        localStorage.setItem('username', userNameFinal);
         localStorage.setItem('apartmentNumber', aptNum);
 
         // ✅ Pasar datos al componente padre
-        onRegister({ username: data.username, apartmentNumber: aptNum });
+        onRegister({ username: userNameFinal, apartmentNumber: aptNum });
       } else {
         setError(data.message || 'Error al registrar el usuario');
       }
     } catch (err) {
+      console.error('❌ Error de conexión:', err);
       setError('Error de conexión con el servidor');
     }
   };
