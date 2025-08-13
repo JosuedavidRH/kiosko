@@ -23,8 +23,16 @@ function Register({ onRegister, goToLogin }) {
 
       if (data.success) {
         console.log("Registro exitoso:", data);
-        // ✅ Pasar datos a App.jsx para que los guarde en estado y localStorage
-        onRegister({ username: data.username, apartmentNumber: data.apartmentNumber });
+
+        // ✅ Usar el apartmentNumber del backend o el que el usuario ingresó
+        const aptNum = data.apartmentNumber || apartmentNumber;
+
+        // ✅ Guardar en localStorage antes de pasar a App.jsx
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('apartmentNumber', aptNum);
+
+        // ✅ Pasar datos al componente padre
+        onRegister({ username: data.username, apartmentNumber: aptNum });
       } else {
         setError(data.message || 'Error al registrar el usuario');
       }
