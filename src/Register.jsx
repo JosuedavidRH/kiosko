@@ -30,7 +30,7 @@ function Register({ onRegister, goToLogin }) {
       if (data.success) {
         console.log("✅ Registro exitoso:", data);
 
-        // ✅ Usar el apartmentNumber del backend o el ingresado por el usuario
+        // ✅ Usar el apartmentNumber y username del backend si existen, si no, usar los del formulario
         const aptNum = data.apartmentNumber || apartmentNumber;
         const userNameFinal = data.username || username;
 
@@ -38,7 +38,7 @@ function Register({ onRegister, goToLogin }) {
         localStorage.setItem('username', userNameFinal);
         localStorage.setItem('apartmentNumber', aptNum);
 
-        // ✅ Pasar datos al componente padre
+        // ✅ Llamar a App.jsx con datos correctos
         onRegister({ username: userNameFinal, apartmentNumber: aptNum });
       } else {
         setError(data.message || 'Error al registrar el usuario');
