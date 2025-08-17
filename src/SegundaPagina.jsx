@@ -1,5 +1,3 @@
-//CODIGO en produccion 
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
@@ -17,13 +15,19 @@ function SegundaPagina({ user }) {
 
   // Cargar datos desde localStorage y reiniciar si ya terminó la tanda de 3
   useEffect(() => {
+    console.log("🔎 [SegundaPagina] user recibido:", user);
+
     if (!user) {
+      console.warn("⚠️ No hay user, redirigiendo al inicio...");
       navigate('/');
       return;
     }
 
     const codigosGuardados = JSON.parse(localStorage.getItem('codigos'));
     const indexGuardado = parseInt(localStorage.getItem('indexActual'), 10);
+
+    console.log("📦 Codigos guardados en localStorage:", codigosGuardados);
+    console.log("📦 Index guardado en localStorage:", indexGuardado);
 
     if (
       codigosGuardados &&
@@ -33,29 +37,35 @@ function SegundaPagina({ user }) {
     ) {
       setCodigos(codigosGuardados);
       setIndexActual(indexGuardado);
+      console.log("✅ Se cargaron los códigos existentes:", codigosGuardados, "Index actual:", indexGuardado);
     } else {
       const nuevos = generarTresCodigos();
       setCodigos(nuevos);
       setIndexActual(0);
       localStorage.setItem('codigos', JSON.stringify(nuevos));
       localStorage.setItem('indexActual', '0');
+      console.log("🆕 Generados nuevos códigos:", nuevos);
     }
   }, [user, navigate]);
 
-  
   const qrActual = user?.apartmentNumber ? `${user.apartmentNumber}|${codigos[indexActual]}` : '';
 
-
+  console.log("🎯 qrActual:", qrActual);
+  console.log("👉 codigos:", codigos);
+  console.log("👉 indexActual:", indexActual);
 
   const manejarVolver = () => {
     const nuevoIndex = indexActual + 1;
+    console.log("🔄 manejando volver → nuevoIndex:", nuevoIndex);
 
     if (nuevoIndex < 3) {
       localStorage.setItem('indexActual', nuevoIndex.toString());
+      console.log("📥 Guardado nuevo index en localStorage:", nuevoIndex);
     } else {
       const nuevosCodigos = generarTresCodigos();
       localStorage.setItem('codigos', JSON.stringify(nuevosCodigos));
       localStorage.setItem('indexActual', '0');
+      console.log("🆕 Reinicio de códigos:", nuevosCodigos);
     }
 
     navigate('/');
@@ -94,7 +104,7 @@ function SegundaPagina({ user }) {
           <QRCode value={qrActual} size={200} bgColor="#ffffff" fgColor="#000000" />
         </div>
       ) : (
-        <p>No hay más QR para mostrar.</p>
+        <p>⚠️ No hay más QR para mostrar.</p>
       )}
 
       <button
@@ -120,3 +130,4 @@ function SegundaPagina({ user }) {
 }
 
 export default SegundaPagina;
+
