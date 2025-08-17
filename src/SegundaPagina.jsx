@@ -25,19 +25,19 @@ function SegundaPagina({ user }) {
 
     const codigosGuardados = JSON.parse(localStorage.getItem('codigos'));
     const indexGuardado = parseInt(localStorage.getItem('indexActual'), 10);
+    const indexSeguro = isNaN(indexGuardado) ? 0 : indexGuardado; // ✅ Fallback robusto
 
     console.log("📦 Codigos guardados en localStorage:", codigosGuardados);
-    console.log("📦 Index guardado en localStorage:", indexGuardado);
+    console.log("📦 Index guardado en localStorage:", indexSeguro);
 
     if (
       codigosGuardados &&
       Array.isArray(codigosGuardados) &&
-      !isNaN(indexGuardado) &&
-      indexGuardado < 3
+      indexSeguro < 3
     ) {
       setCodigos(codigosGuardados);
-      setIndexActual(indexGuardado);
-      console.log("✅ Se cargaron los códigos existentes:", codigosGuardados, "Index actual:", indexGuardado);
+      setIndexActual(indexSeguro);
+      console.log("✅ Se cargaron los códigos existentes:", codigosGuardados, "Index actual:", indexSeguro);
     } else {
       const nuevos = generarTresCodigos();
       setCodigos(nuevos);
@@ -134,4 +134,3 @@ function SegundaPagina({ user }) {
 }
 
 export default SegundaPagina;
-
