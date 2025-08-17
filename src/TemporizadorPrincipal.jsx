@@ -7,7 +7,7 @@ function formatTime(seconds) {
   return `${hrs}:${mins}:${secs}`;
 }
 
-function TemporizadorPrincipal({ start, initialTime = 12 * 60 * 60, onGuardarTiempo }) {
+function TemporizadorPrincipal({ start, initialTime = 1 * 60, onGuardarTiempo, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(() => {
     const restaurado = localStorage.getItem("Restaurando temporizador");
 
@@ -42,16 +42,31 @@ function TemporizadorPrincipal({ start, initialTime = 12 * 60 * 60, onGuardarTie
     return () => clearInterval(interval);
   }, [start, timeLeft, onGuardarTiempo]);
 
-  // 🔴 NO ocultes el temporizador si no está corriendo
-  if (timeLeft <= 0) {
-    return <div>⏳ Tiempo agotado</div>;
+  // 🆕 Detectar cuando llega a 0 sin romper la lógica original
+useEffect(() => {
+  if (timeLeft === 0 && onFinish) {
+    onFinish(); // Esto se ejecuta solo cuando llega exactamente a 0
   }
+}, [timeLeft, onFinish]);
+
+// ✅ El temporizador siempre se muestra, incluso si está en 00:00
+return (
+  <div style={{ margin: '20px', fontSize: '1.2rem' }}>
+    <span style={{ fontSize: '0.8rem', color: 'white' }}>
+      TIENES {initialTime === 60 ? '1 MINUTO' : `${Math.floor(initialTime / 3600)} HORAS`} PARA PAGAR:
+    </span>{' '}
+    {formatTime(Math.max(timeLeft, 0))} {/* Nunca baja de 00:00 */}
+    {!start && <span></span>}
+  </div>
+);
+
 
   return (
-     <div style={{ margin: '20px', fontSize: '1.2rem' }}>
-    <span style={{ fontSize: '0.8rem', color: 'white' }}>
+    <div style={{ margin: '20px', fontSize: '1.2rem' }}>
+      <span style={{ fontSize: '0.8rem', color: 'white' }}>
         TIENES 12 HORAS PARA PAGAR: 
-      </span>  {formatTime(timeLeft)} {!start && <span></span>}
+      </span>{' '}
+      {formatTime(timeLeft)} {!start && <span></span>}
     </div>
   );
 }
