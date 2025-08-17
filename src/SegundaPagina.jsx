@@ -48,7 +48,11 @@ function SegundaPagina({ user }) {
     }
   }, [user, navigate]);
 
-  const qrActual = user?.apartmentNumber ? `${user.apartmentNumber}|${codigos[indexActual]}` : '';
+  // ✅ Validación robusta para no renderizar undefined
+  const qrActual =
+    user?.apartmentNumber && codigos.length > 0 && codigos[indexActual]
+      ? `${user.apartmentNumber}|${codigos[indexActual]}`
+      : '';
 
   console.log("🎯 qrActual:", qrActual);
   console.log("👉 codigos:", codigos);
@@ -98,7 +102,7 @@ function SegundaPagina({ user }) {
         ))}
       </div>
 
-      {/* Mostrar QR actual */}
+      {/* Mostrar QR actual solo si existe */}
       {qrActual ? (
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <QRCode value={qrActual} size={200} bgColor="#ffffff" fgColor="#000000" />
