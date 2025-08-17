@@ -13,6 +13,71 @@ import { FaClock } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 import { guardarStatusActual } from "./utils/guardarStatusActual";
 
+
+// 🚀 Global (fuera de componentes)
+export const cerrarSesionGlobal = ({ auto = false } = {}) => {
+  const timeLeftStr = localStorage.getItem('timeLeftPrincipal');
+  const userId = localStorage.getItem('apartmentNumber');
+  const clickCountStr = localStorage.getItem('clickCount');
+
+  if (!userId) return;
+
+  const temporizadorPrincipal = Number.parseInt(timeLeftStr, 10) || 0;
+  const statusActual = Number(clickCountStr) || 0;
+
+  const bodyTemp = JSON.stringify({ userId, temporizadorPrincipal });
+  const bodyStatus = JSON.stringify({ userId, statusActual });
+
+  // 🔑 1) Si es auto → limpiar inmediatamente
+  if (auto) {
+    localStorage.clear();
+    console.log("🧹 LocalStorage limpiado INMEDIATO (auto)");
+  }
+
+  try {
+    if (auto && navigator.sendBeacon) {
+      // 🚀 Beacon para que no se bloquee
+      navigator.sendBeacon(
+        "https://backend-1uwd.onrender.com/api/realTime/temporizador",
+        new Blob([bodyTemp], { type: "application/json" })
+      );
+      navigator.sendBeacon(
+        "https://backend-1uwd.onrender.com/api/realTime/statusActual",
+        new Blob([bodyStatus], { type: "application/json" })
+      );
+      console.log("📡 Datos enviados con sendBeacon (auto)");
+      return;
+    }
+
+    // 🚀 Manual o fallback → fetch
+    fetch("https://backend-1uwd.onrender.com/api/realTime/temporizador", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: bodyTemp,
+      keepalive: true,
+    });
+
+    fetch("https://backend-1uwd.onrender.com/api/realTime/statusActual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: bodyStatus,
+      keepalive: true,
+    });
+  } catch (e) {
+    console.error("❌ Error cerrando sesión:", e);
+  } finally {
+    // 🔑 2) Si no era auto → limpiar al final
+    if (!auto) {
+      localStorage.clear();
+      console.log("🧹 LocalStorage limpiado (manual)");
+    }
+  }
+};
+
+
+
+
+
 function App() {
   const [user, setUser] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -79,7 +144,14 @@ useEffect(() => {
   localStorage.setItem('factura3Terminada', factura3Terminada);
 }, [factura3Terminada]);
 
-
+// 🚨  botón manual "Cerrar sesión"
+  const handleCerrarSesion = async () => {
+  console.log("👋 Cerrando sesión manual...");
+  await cerrarSesionGlobal({ auto: false });
+  setUser(null);
+  setApartmentNumber(null);
+  window.location.reload();
+};
 
 
   return user ? (
@@ -100,6 +172,7 @@ useEffect(() => {
   setFactura3Terminada={setFactura3Terminada}
   isProcessing={isProcessing}          // ✅
   setIsProcessing={setIsProcessing}    // ✅
+  handleCerrarSesion={handleCerrarSesion} // 👇 
 />
  ) : isRegistering ? (
   <Register 
@@ -149,13 +222,17 @@ function AppContent({
   factura1Terminada, setFactura1Terminada,
   factura2Terminada, setFactura2Terminada,
   factura3Terminada, setFactura3Terminada,
-   isProcessing, setIsProcessing   
+   isProcessing, setIsProcessing,
+   handleCerrarSesion // 👈 aquí lo recibes  
+   
  }) {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(0);
   const [temporizadorActivo, setTemporizadorActivo] = useState(false);
   const [initialTime, setInitialTime] = useState(12 * 60 * 60); 
   const [temporizadorListo, setTemporizadorListo] = useState(false); // 👈 nueva bandera
+  // 🔴 Estado para cambiar el fondo
+  const [fondoRojo, setFondoRojo] = useState(false);
 
 // 🕒 Recuperar temporizador + statusActual al iniciar sesión
 useEffect(() => {
@@ -164,57 +241,73 @@ useEffect(() => {
       const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
       const data = await res.json();
 
-      
       if (!data.success || !data.data) {
-  console.warn("⚠️ No hay datos previos, usando valores por defecto.");
+        console.warn("⚠️ No hay datos previos, usando valores por defecto.");
 
-  // 🔹 Borrar solo las claves específicas, sin tocar apartmentNumber
-  const keysToRemove = [
-    'clicked',
-    'codigos',
-    'factura1Terminada',
-    'factura2Terminada',
-    'factura3Terminada',
-    'indexActual',
-    'timeLeftFactura1',
-    'timeLeftPrincipal',
-    'timerStarted'
-  ];
-  keysToRemove.forEach(key => localStorage.removeItem(key));
+        const keysToRemove = [
+          'clicked',
+          'codigos',
+          'factura1Terminada',
+          'factura2Terminada',
+          'factura3Terminada',
+          'indexActual',
+          'timeLeftFactura1',
+          'timerStarted'
+        ];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
 
-  // 🔹 Inicializar valores por defecto
-  setInitialTime(12 * 60 * 60);
-  setTimerStarted(false);
-  setTemporizadorListo(true);
-  setTemporizadorActivo(false);
-  setClickCount(0);
-  localStorage.setItem('clickCount', 0);
+        localStorage.setItem('timeLeftPrincipal', '60');
+        setInitialTime(60);
+        setTimerStarted(false);
+        setTemporizadorListo(true);
+        setTemporizadorActivo(false);
+        setClickCount(0);
+        localStorage.setItem('clickCount', 0);
+        setFondoRojo(false);
 
-  return;
-}
-
+        return;
+      }
 
       const { temporizadorPrincipal, updated_at, statusActual } = data.data;
 
-      // ---------- 🎯 Restaurar estado del botón principal ----------
       let statusNum = 0;
       if (statusActual !== undefined && statusActual !== null) {
         statusNum = Number(statusActual);
-        setClickCount(statusNum);
-        localStorage.setItem('clickCount', statusNum);
         console.log(`✅ statusActual cargado: ${statusNum}`);
       } else {
         console.warn('⚠️ No se encontró statusActual, usando 0 por defecto.');
-        setClickCount(0);
-        localStorage.setItem('clickCount', 0);
+        statusNum = 0;
       }
 
-      // ---------- ⏱ Restaurar temporizador solo si clickCount !== 0 ----------
-      if (statusNum !== 0 && temporizadorPrincipal !== null) {
+      setClickCount(statusNum);
+      localStorage.setItem('clickCount', statusNum);
+
+      if (statusNum === 0) {
+        console.log("🔄 clickCount es 0 → forzando temporizador a 60 y pausado");
+
+        const keysToRemove = [
+          'clicked',
+          'codigos',
+          'factura1Terminada',
+          'factura2Terminada',
+          'factura3Terminada',
+          'indexActual',
+          'timeLeftFactura1',
+          'timerStarted'
+        ];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        localStorage.setItem('timeLeftPrincipal', '60');
+        setInitialTime(60);
+        setTimerStarted(false);
+        setTemporizadorListo(true);
+        setTemporizadorActivo(false);
+        setFondoRojo(false);
+
+      } else if (temporizadorPrincipal !== null) {
         const tiempoGuardado = parseInt(temporizadorPrincipal, 10);
         const horaCierre = new Date(updated_at).getTime();
-        const horaActual = Date.now();
-        const tiempoTranscurrido = Math.floor((horaActual - horaCierre) / 1000);
+        const tiempoTranscurrido = Math.floor((Date.now() - horaCierre) / 1000);
         const tiempoRestante = tiempoGuardado - tiempoTranscurrido;
 
         if (!isNaN(tiempoRestante) && tiempoRestante > 0) {
@@ -224,87 +317,110 @@ useEffect(() => {
           setTimerStarted(true);
           setTemporizadorListo(true);
           setTemporizadorActivo(true);
-        } else {
-          console.log("🆕 Tiempo inválido o agotado. Reiniciando temporizador.");
-          localStorage.setItem('timeLeftPrincipal', (12 * 60 * 60).toString());
-          setInitialTime(12 * 60 * 60);
+        } else if (!isNaN(tiempoRestante) && tiempoRestante <= 0) {
+          console.log("🛑 Tiempo agotado, manteniendo en 0");
+          localStorage.setItem('timeLeftPrincipal', '0');
+          setInitialTime(0);
           setTimerStarted(false);
           setTemporizadorListo(true);
           setTemporizadorActivo(false);
+
+          if (statusNum > 0) {
+            setFondoRojo(true);
+          } else {
+            setFondoRojo(false);
+          }
+        } else {
+          console.log("🆕 Tiempo inválido. Reiniciando temporizador.");
+          localStorage.setItem('timeLeftPrincipal', '60');
+          setInitialTime(60);
+          setTimerStarted(false);
+          setTemporizadorListo(true);
+          setTemporizadorActivo(false);
+          setFondoRojo(false);
         }
-      } else if (statusNum === 0) {
-        console.log("🔄 clickCount es 0, reiniciando y pausando temporizador");
-        localStorage.setItem('timeLeftPrincipal', (12 * 60 * 60).toString());
-        setInitialTime(12 * 60 * 60);
-        setTimerStarted(false);
-        setTemporizadorListo(true);
-        setTemporizadorActivo(false);
       }
-      
+
     } catch (error) {
       console.error("❌ Error al obtener datos iniciales:", error);
-      setInitialTime(12 * 60 * 60);
+      localStorage.setItem('timeLeftPrincipal', '60');
+      setInitialTime(60);
       setTimerStarted(false);
       setTemporizadorListo(true);
       setTemporizadorActivo(false);
+      setFondoRojo(false);
     }
   };
 
-  // 🔍 Recuperar apartmentNumber si no está en el state
-  let apt = apartmentNumber;
-  if (!apt) {
-    apt = localStorage.getItem("apartmentNumber");
-    if (!apt) {
-      console.warn("⚠️ No se encontró apartmentNumber en localStorage");
-      return; // No seguimos si no hay apartmentNumber
-    }
+  if (apartmentNumber) {
+    fetchDatosIniciales();
   }
-
-  fetchDatosIniciales(apt);
 }, [apartmentNumber]);
-
 
 // 📌 Lógica para activar temporizador cuando clickCount === 1
 useEffect(() => {
-  if (clickCount === 1 && !timerStarted) {
+  if (clickCount === 1 && initialTime > 0) {
     console.log('✅ Activando temporizador por botón principal...');
     setTimerStarted(true);
   }
-}, [clickCount, timerStarted]);
+}, [clickCount, initialTime]);
 
+// 🛑   botón automatico "Cerrar sesión"
+useEffect(() => {
+  const ejecutarCierre = () => cerrarSesionGlobal(true);
+  window.addEventListener("beforeunload", ejecutarCierre);
+  return () => window.removeEventListener("beforeunload", ejecutarCierre);
+}, []);
 
  
   return (
     <Routes>
-
-    <Route path="/segunda" element={<SegundaPagina user={{ username: user, apartmentNumber }} />} />
-
       <Route
         path="/"
         element={
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            height: '100vh',
-            backgroundColor: '#282c34',
-            color: 'white',
-            fontFamily: 'Arial, sans-serif',
-            padding: '20px',
-            textAlign: 'center'
-          }}>
-            <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', margin: '0' }}>
-              Hola, {user}! Apto: {apartmentNumber}
-            </h1>
-        {temporizadorListo && (
-  <TemporizadorPrincipal
-    start={timerStarted}
-    initialTime={initialTime}
-    onGuardarTiempo={(tiempoRestante) => {
-      localStorage.setItem('timeLeftPrincipal', tiempoRestante.toString());
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+  height: '100vh',
+  backgroundColor: fondoRojo ? 'red' : '#282c34', // 🔹 Aquí aplicamos el cambio
+  color: 'white',
+  fontFamily: 'Arial, sans-serif',
+  padding: '20px',
+  textAlign: 'center'
+}}
+>
+  <h1
+    style={{
+      fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
+      margin: '0'
     }}
-  />
-)}
+  >
+    Hola, {user}! Apto: {apartmentNumber}
+  </h1>
+
+  {/* 🔹 Mostrar temporizador solo si clickCount > 0 */}
+  {clickCount > 0 && (
+    <TemporizadorPrincipal
+      start={timerStarted}
+      initialTime={initialTime}
+      onGuardarTiempo={(tiempoRestante) => {
+        localStorage.setItem(
+          'timeLeftPrincipal',
+          tiempoRestante.toString()
+        );
+      }}
+      onFinish={() => { // 🔹 Callback al terminar
+       setTimerStarted(false);
+
+  if (clickCount > 0) {
+    setFondoRojo(true);   // 🔥 aquí se marca la alerta
+  }
+
+      }}
+    />
+  )}
+
 
 
 
@@ -569,6 +685,7 @@ useEffect(() => {
   </header>
 )}
 
+
 <footer style={{
   display: 'flex',
   justifyContent: 'center',
@@ -586,6 +703,10 @@ useEffect(() => {
     justifyContent: 'center',
     alignItems: 'center'
   }}>
+
+  
+    {(clickCount === 0 || (timerStarted && clickCount > 0)) && (
+<>
    <button
   disabled={clickCount === 3 || isProcessing}
   onClick={async () => {
@@ -669,6 +790,9 @@ useEffect(() => {
   {clickCount === 3 && 'YA NO TIENES MAS COMPRAS'}
 </button>
 
+  </>
+  )}
+
 
 
     <div style={{
@@ -682,81 +806,10 @@ useEffect(() => {
       alignItems: 'center'
     }}>
 
-{timerStarted && (
-  <>
+
+  
  <button
-  onClick={async () => {
-    const timeLeft = localStorage.getItem('timeLeftPrincipal');
-    const apartmentNumber = localStorage.getItem('apartmentNumber');
-    const clickCount = localStorage.getItem('clickCount');
-    const API_URL = 'https://backend-1uwd.onrender.com/api/realTime';
-
-    if (!apartmentNumber) {
-      console.warn('⚠️ No se encontró apartmentNumber en localStorage');
-      return;
-    }
-
-    try {
-      // 🔹 Calentar el servidor (evita ERR_CONNECTION_CLOSED en Render free)
-      await fetch(`${API_URL}/ping`).catch(() =>
-        console.warn('⚠️ No se pudo "despertar" el backend antes de guardar')
-      );
-
-      // Guardar temporizador si existe
-      if (timeLeft) {
-        const parsedTime = parseInt(timeLeft, 10);
-        console.log('Guardando temporizador:', parsedTime, 'para apartamento:', apartmentNumber);
-
-        const resTimer = await fetch(`${API_URL}/temporizador`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: apartmentNumber,
-            temporizadorPrincipal: parsedTime,
-          }),
-        });
-
-        const dataTimer = await resTimer.json();
-        if (dataTimer.success) {
-          console.log('⏱ Tiempo guardado con éxito');
-        } else {
-          console.error('❌ Error guardando tiempo:', dataTimer.message || 'Sin mensaje');
-        }
-      } else {
-        console.warn('⏱ No hay tiempo guardado en localStorage');
-      }
-
-      // Guardar statusActual si existe
-      if (clickCount !== null) {
-        console.log('Guardando statusActual:', Number(clickCount));
-
-        const resStatus = await fetch(`${API_URL}/statusActual`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: apartmentNumber, // 🔹 Consistencia: siempre userId
-            statusActual: Number(clickCount) || 0,
-          }),
-        });
-
-        const dataStatus = await resStatus.json();
-        if (dataStatus.success) {
-          console.log('🎯 StatusActual guardado con éxito');
-        } else {
-          console.error('❌ Error guardando statusActual:', dataStatus.message || 'Sin mensaje');
-        }
-      }
-
-      // Limpiar y recargar con pequeño delay
-      setTimeout(() => {
-        localStorage.clear();
-        window.location.reload();
-      }, 200);
-
-    } catch (error) {
-      console.error('❌ Error al guardar datos antes de cerrar sesión:', error);
-    }
-  }}
+  onClick={handleCerrarSesion}
   style={{
     alignSelf: 'center',
     marginTop: '190px',
@@ -774,14 +827,10 @@ useEffect(() => {
 </button>
 
 
-  </>
-)}
 
 </div>
  </div>
 </footer>
-
-
 
 
           </div>
