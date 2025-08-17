@@ -12,6 +12,7 @@ function SegundaPagina({ user }) {
   const navigate = useNavigate();
   const [codigos, setCodigos] = useState([]);
   const [indexActual, setIndexActual] = useState(0);
+  const [isReady, setIsReady] = useState(false); // ✅ Nuevo estado de carga
 
   // Cargar datos desde localStorage y reiniciar si ya terminó la tanda de 3
   useEffect(() => {
@@ -46,6 +47,8 @@ function SegundaPagina({ user }) {
       localStorage.setItem('indexActual', '0');
       console.log("🆕 Generados nuevos códigos:", nuevos);
     }
+
+    setIsReady(true); // ✅ Activamos cuando ya se cargó todo
   }, [user, navigate]);
 
   // ✅ Validación robusta para no renderizar undefined
@@ -74,6 +77,15 @@ function SegundaPagina({ user }) {
 
     navigate('/');
   };
+
+  // ✅ Si aún no cargó, mostramos "Cargando..."
+  if (!isReady) {
+    return (
+      <div style={{ textAlign: 'center', paddingTop: '100px' }}>
+        <p>⏳ Cargando QR...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', textAlign: 'center', paddingTop: '50px' }}>
