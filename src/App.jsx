@@ -233,7 +233,7 @@ function AppContent({
   const [temporizadorListo, setTemporizadorListo] = useState(false); // 👈 nueva bandera
   // 🔴 Estado para cambiar el fondo
   const [fondoRojo, setFondoRojo] = useState(false);
-  
+
 // 🕒 Recuperar temporizador + statusActual al iniciar sesión
 useEffect(() => {
   const fetchDatosIniciales = async () => {
@@ -246,8 +246,8 @@ useEffect(() => {
 
         const keysToRemove = [
           'clicked',
-          // ❌ NO BORRAR 'codigos'
-          // ❌ NO BORRAR 'indexActual'
+          'codigos',
+          'indexActual',
           'factura1Terminada',
           'factura2Terminada',
           'factura3Terminada',
@@ -287,8 +287,8 @@ useEffect(() => {
 
         const keysToRemove = [
           'clicked',
-          // ❌ NO BORRAR 'codigos'
-          // ❌ NO BORRAR 'indexActual'
+           'codigos',
+          'indexActual',
           'factura1Terminada',
           'factura2Terminada',
           'factura3Terminada',
