@@ -91,12 +91,18 @@ function SegundaPagina({ user }) {
 
       {/* Mostrar QR actual */}
       {qrActual ? (
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <QRCode value={qrActual} size={200} bgColor="#ffffff" fgColor="#000000" />
-        </div>
-      ) : (
-        <p>No hay más QR para mostrar.</p>
-      )}
+  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+    <QRCode 
+      value={`${user}|${qrActual}`}   // ✅ Concatenamos apto + | + código
+      size={200}
+      bgColor="#ffffff"
+      fgColor="#000000"
+    />
+  </div>
+) : (
+  <p>No hay más QR para mostrar.</p>
+)}
+
 
       <button
         onClick={manejarVolver}
