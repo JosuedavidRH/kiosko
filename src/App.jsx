@@ -745,7 +745,10 @@ useEffect(() => {
         const nuevoEstado = (clickCount + 1) % 4;
         setClickCount(nuevoEstado);
         guardarStatusActual(nuevoEstado, apartmentNumber);
-        navigate('/segunda');
+
+        // 🚀 Aquí enviamos el número de apto al navegar
+        navigate('/segunda', { state: { user: apartmentNumber } });
+       
 
       } catch (error) {
         console.error('❌ Error general al generar y guardar códigos:', error);

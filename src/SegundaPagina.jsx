@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 
 function generarTresCodigos() {
@@ -8,8 +8,11 @@ function generarTresCodigos() {
   );
 }
 
-function SegundaPagina({ user }) {
+function SegundaPagina() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const user = location.state?.user; // ✅ Recuperamos el número de apto
+
   const [codigos, setCodigos] = useState([]);
   const [indexActual, setIndexActual] = useState(0);
 
@@ -58,13 +61,15 @@ function SegundaPagina({ user }) {
 
   return (
     <div style={{ 
-      backgroundColor: 'white',  // ✅ Fondo blanco
-      color: 'black',            // ✅ Texto negro
+      backgroundColor: 'white',
+      color: 'black',
       textAlign: 'center', 
       paddingTop: '50px',
-      minHeight: '100vh'         // ✅ Para que cubra toda la pantalla
+      minHeight: '100vh'
     }}>
-      <h2 style={{ marginBottom: '30px' }}>Bienvenido a la segunda página</h2>
+      <h2 style={{ marginBottom: '30px' }}>
+        Bienvenido {user ? `Apartamento ${user}` : ''} 
+      </h2>
 
       {/* Mostrar los 3 códigos en fila */}
       <div style={{
@@ -79,7 +84,7 @@ function SegundaPagina({ user }) {
             style={{
               padding: '10px 20px',
               borderRadius: '10px',
-              backgroundColor: i === indexActual ? '#00c0ff' : '#f0f0f0', // gris claro en lugar de negro
+              backgroundColor: i === indexActual ? '#00c0ff' : '#f0f0f0',
               fontWeight: 'bold',
               fontSize: '1.3rem'
             }}
@@ -91,18 +96,17 @@ function SegundaPagina({ user }) {
 
       {/* Mostrar QR actual */}
       {qrActual ? (
-  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-    <QRCode 
-      value={`${user}|${qrActual}`}   // ✅ Concatenamos apto + | + código
-      size={200}
-      bgColor="#ffffff"
-      fgColor="#000000"
-    />
-  </div>
-) : (
-  <p>No hay más QR para mostrar.</p>
-)}
-
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <QRCode 
+            value={`${user}|${qrActual}`}   // ✅ Concatenamos apto + | + código
+            size={200}
+            bgColor="#ffffff"
+            fgColor="#000000"
+          />
+        </div>
+      ) : (
+        <p>No hay más QR para mostrar.</p>
+      )}
 
       <button
         onClick={manejarVolver}
