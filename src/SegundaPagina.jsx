@@ -1,5 +1,3 @@
-//CODIGO en produccion 
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
@@ -42,10 +40,7 @@ function SegundaPagina({ user }) {
     }
   }, [user, navigate]);
 
-  
-  const qrActual = user?.apartmentNumber ? `${user.apartmentNumber}|${codigos[indexActual]}` : '';
-
-
+  const qrActual = codigos[indexActual];
 
   const manejarVolver = () => {
     const nuevoIndex = indexActual + 1;
@@ -62,7 +57,7 @@ function SegundaPagina({ user }) {
   };
 
   return (
-    <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', textAlign: 'center', paddingTop: '50px' }}>
+    <div style={{ color: 'white', textAlign: 'center', paddingTop: '50px' }}>
       <h2 style={{ marginBottom: '30px' }}>Bienvenido a la segunda página</h2>
 
       {/* Mostrar los 3 códigos en fila */}
