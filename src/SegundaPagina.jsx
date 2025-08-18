@@ -57,7 +57,13 @@ function SegundaPagina({ user }) {
   };
 
   return (
-    <div style={{ color: 'white', textAlign: 'center', paddingTop: '50px' }}>
+    <div style={{ 
+      backgroundColor: 'white',  // ✅ Fondo blanco
+      color: 'black',            // ✅ Texto negro
+      textAlign: 'center', 
+      paddingTop: '50px',
+      minHeight: '100vh'         // ✅ Para que cubra toda la pantalla
+    }}>
       <h2 style={{ marginBottom: '30px' }}>Bienvenido a la segunda página</h2>
 
       {/* Mostrar los 3 códigos en fila */}
@@ -73,7 +79,7 @@ function SegundaPagina({ user }) {
             style={{
               padding: '10px 20px',
               borderRadius: '10px',
-              backgroundColor: i === indexActual ? '#00c0ff' : '#333',
+              backgroundColor: i === indexActual ? '#00c0ff' : '#f0f0f0', // gris claro en lugar de negro
               fontWeight: 'bold',
               fontSize: '1.3rem'
             }}
