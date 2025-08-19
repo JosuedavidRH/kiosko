@@ -746,7 +746,10 @@ useEffect(() => {
         setClickCount(nuevoEstado);
         guardarStatusActual(nuevoEstado, apartmentNumber);
 
-        // 🚀 Aquí enviamos el número de apto al navegar
+
+
+
+        // 🚀 clickCount + 1 Aquí enviamos el número de apto al navegar
         navigate('/segunda', { state: { user: apartmentNumber } });
        
 
@@ -758,8 +761,9 @@ useEffect(() => {
       const nuevoEstado = (clickCount + 1) % 4;
       setClickCount(nuevoEstado);
       guardarStatusActual(nuevoEstado, apartmentNumber);
-      navigate('/segunda');
 
+      // 🚀 clickCount + 2 ,3 Aquí enviamos el número de apto al navegar
+        navigate('/segunda', { state: { user: apartmentNumber } });
     } else {
       const nuevoEstado = (clickCount + 1) % 4;
       setClickCount(nuevoEstado);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 
 function generarTresCodigos() {
@@ -11,7 +11,9 @@ function generarTresCodigos() {
 function SegundaPagina() {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = location.state?.user; // ✅ Recuperamos el número de apto
+
+  // ✅ Primero intentamos sacar el user del state, si no existe lo tomamos de localStorage
+  const user = location.state?.user || localStorage.getItem('user');
 
   const [codigos, setCodigos] = useState([]);
   const [indexActual, setIndexActual] = useState(0);
@@ -61,14 +63,14 @@ function SegundaPagina() {
 
   return (
     <div style={{ 
-      backgroundColor: 'white',
-      color: 'black',
+      backgroundColor: 'white',  
+      color: 'black',            
       textAlign: 'center', 
       paddingTop: '50px',
-      minHeight: '100vh'
+      minHeight: '100vh'        
     }}>
       <h2 style={{ marginBottom: '30px' }}>
-        Bienvenido {user ? `Apartamento ${user}` : ''} 
+        Bienvenido {user} a la segunda página
       </h2>
 
       {/* Mostrar los 3 códigos en fila */}
@@ -98,7 +100,7 @@ function SegundaPagina() {
       {qrActual ? (
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <QRCode 
-            value={`${user}|${qrActual}`}   // ✅ Concatenamos apto + | + código
+            value={`${user}|${qrActual}`}   // ✅ Formato "302|548921"
             size={200}
             bgColor="#ffffff"
             fgColor="#000000"
