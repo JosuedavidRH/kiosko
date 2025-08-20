@@ -17,7 +17,9 @@ function TemporizadorPrincipal({ start, initialTime = 1 * 60, onGuardarTiempo, o
       return parseInt(restaurado, 10);
     }
 
-   
+    const local = localStorage.getItem("timeLeftPrincipal");
+    return local !== null ? parseInt(local, 10) : initialTime;
+  });
 
   useEffect(() => {
     let interval = null;
@@ -26,7 +28,7 @@ function TemporizadorPrincipal({ start, initialTime = 1 * 60, onGuardarTiempo, o
       interval = setInterval(() => {
         setTimeLeft(prev => {
           const updated = prev - 1;
-          //localStorage.setItem('timeLeftPrincipal', updated);
+          localStorage.setItem('timeLeftPrincipal', updated);
 
           if (onGuardarTiempo) {
             onGuardarTiempo(updated);
