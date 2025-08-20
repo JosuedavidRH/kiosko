@@ -1,4 +1,4 @@
-// guardarStatusActual.js
+// restaurar seccion 
 export const guardarStatusActual = async (nuevoEstado, aptoParam) => {
   try {
     // Obtenemos el número de apartamento
@@ -11,7 +11,7 @@ export const guardarStatusActual = async (nuevoEstado, aptoParam) => {
 
     console.log(`📤 Enviando a guardar_statusActual: { userId: '${apartmentNumber}', statusActual: '${nuevoEstado}' }`);
 
-    const res = await fetch("http://localhost:4000/api/statusActual", {
+    const res = await fetch("https://backend-1uwd.onrender.com/api/realTime/statusActual", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
