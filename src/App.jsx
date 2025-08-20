@@ -707,64 +707,110 @@ useEffect(() => {
   
     {(clickCount === 0 || (timerStarted && clickCount > 0)) && (
 <>
-   <button
+  <button
   disabled={clickCount === 3 || isProcessing}
   onClick={async () => {
     setIsProcessing(true);
 
     if (clickCount === 0) {
-      try {
+  try {
+    // ✅ Generar 3 códigos aleatorios
+    const nuevosCodigos = Array.from({ length: 3 }, () =>
+      Math.floor(100000 + Math.random() * 900000).toString()
+    );
 
+    // ✅ Guardar en localStorage
+    localStorage.setItem('codigos', JSON.stringify(nuevosCodigos));
+    localStorage.setItem('indexActual', '0');
 
-        // ✅ Generar 3 códigos aleatorios
-        const nuevosCodigos = Array.from({ length: 3 }, () =>
-          Math.floor(100000 + Math.random() * 900000).toString()
-        );
+    // ✅ Enviar a la BD
+    for (const codigo of nuevosCodigos) {
+      const payload = {
+        numero_apto: apartmentNumber,
+        codigo_generado: codigo,
+      };
 
-        // ✅ Guardar en localStorage
-        localStorage.setItem('codigos', JSON.stringify(nuevosCodigos));
-        localStorage.setItem('indexActual', '0');
+      console.log('📤 Enviando a guardar_numero:', payload);
 
-        // ✅ Enviar a la BD
-        for (const codigo of nuevosCodigos) {
-          const payload = {
-            numero_apto: apartmentNumber,
-            codigo_generado: codigo
-          };
+      await fetch('https://backend-1uwd.onrender.com/api/guardar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
 
-          console.log('📤 Enviando a guardar_numero:', payload);
+    try {
+      // ✅ Obtener segundos
+      const timeLeftLocal = parseInt(localStorage.getItem('timeLeftPrincipal'), 10);
+      const tiempoARegistrar =
+        Number.isFinite(timeLeftLocal) && timeLeftLocal > 0
+          ? timeLeftLocal
+          : (initialTime && initialTime > 0 ? initialTime : 60);
 
-          await fetch('https://backend-1uwd.onrender.com/api/guardar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        }
+      // ✅ Payload temporizador
+      const payloadTemp = {
+        userId: apartmentNumber,
+        temporizadorPrincipal: tiempoARegistrar,
+      };
 
-        // ✅ Avanzar click count, guardar en backend y redirigir
-        const nuevoEstado = (clickCount + 1) % 4;
-        setClickCount(nuevoEstado);
-        guardarStatusActual(nuevoEstado, apartmentNumber);
+      console.log("⏱️ Guardando temporizadorPrincipal en backend:", payloadTemp);
 
+      const resp = await fetch("https://backend-1uwd.onrender.com/api/realTime/temporizador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadTemp),
+      });
 
+      const json = await resp.json().catch(() => ({}));
+      console.log("🔁 Respuesta temporizador:", resp.status, json);
 
-
-        // 🚀 clickCount + 1 Aquí enviamos el número de apto al navegar
-        navigate('/segunda', { state: { user: apartmentNumber } });
-       
-
-      } catch (error) {
-        console.error('❌ Error general al generar y guardar códigos:', error);
+      // ✅ Iniciar temporizador principal en la UI
+      if (tiempoARegistrar > 0) {
+        setTimerStarted(true);
+        console.log("🚀 temporizadorPrincipal activado");
       }
 
-    } else if (clickCount === 1 || clickCount === 2) {
+    } catch (error) {
+      console.error("❌ Error al activar/guardar temporizador:", error);
+    }
+
+    // ✅ Avanzar click count, guardar en backend y redirigir
+    const nuevoEstado = (clickCount + 1) % 4;
+    setClickCount(nuevoEstado);
+    guardarStatusActual(nuevoEstado, apartmentNumber);
+
+    // 🚀 Aquí enviamos el número de apto al navegar
+    navigate('/segunda', { state: { user: apartmentNumber } });
+
+  } catch (error) {
+    console.error('❌ Error general al generar y guardar códigos:', error);
+  }
+}
+
+    
+
+  else if (clickCount === 1) {
+  
+
+    // 🚀 Ahora sí avanza estado y navega
+    const nuevoEstado = (clickCount + 1) % 4;
+    setClickCount(nuevoEstado);
+    guardarStatusActual(nuevoEstado, apartmentNumber);
+
+    navigate("/segunda", { state: { user: apartmentNumber } });
+   }
+ 
+
+    else if (clickCount === 2) {
       const nuevoEstado = (clickCount + 1) % 4;
       setClickCount(nuevoEstado);
       guardarStatusActual(nuevoEstado, apartmentNumber);
 
-      // 🚀 clickCount + 2 ,3 Aquí enviamos el número de apto al navegar
-        navigate('/segunda', { state: { user: apartmentNumber } });
-    } else {
+      // 🚀 Aquí enviamos el número de apto al navegar
+      navigate('/segunda', { state: { user: apartmentNumber } });
+    } 
+    
+    else {
       const nuevoEstado = (clickCount + 1) % 4;
       setClickCount(nuevoEstado);
       guardarStatusActual(nuevoEstado, apartmentNumber);
@@ -788,7 +834,7 @@ useEffect(() => {
     opacity: clickCount === 3 || isProcessing ? 0.6 : 1,
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   }}
 >
   {clickCount === 0 && 'generar QR'}
