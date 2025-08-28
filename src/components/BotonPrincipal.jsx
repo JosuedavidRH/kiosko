@@ -67,7 +67,7 @@ const BotonPrincipal = ({
           };
           console.log("⏱️ Guardando temporizadorPrincipal en backend:", payloadTemp);
 
-          const resp = await fetch("", {
+          const resp = await fetch("https://backend-1uwd.onrender.com/api/realTime/temporizador", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadTemp),
