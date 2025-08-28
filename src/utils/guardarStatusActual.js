@@ -1,4 +1,9 @@
-// restaurar seccion 
+
+//CODIGO en produccion 
+
+//este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\utils\guardarStatusActual.js" solo analizalo no modifiques nada  
+
+
 export const guardarStatusActual = async (nuevoEstado, aptoParam) => {
   try {
     // Obtenemos el número de apartamento
