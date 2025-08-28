@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
-
+  
 function generarTresCodigos() {
   return Array.from({ length: 3 }, () =>
     Math.floor(100000 + Math.random() * 900000).toString()
