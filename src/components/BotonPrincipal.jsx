@@ -82,7 +82,7 @@ const BotonPrincipal = ({
               ? timeLeftLocal
               : initialTime && initialTime > 0
               ? initialTime
-              : 60;
+              : 43200;
 
           try {
             const payloadTemp = {

@@ -12,8 +12,8 @@ export const TemporizadorContext = createContext();
 export function TemporizadorProvider({
   children,
   apartmentNumber,
-  initialTime = 60,
-  timeLeft = 60,
+  initialTime = 43200,
+  timeLeft = 43200,
   fondoRojo: fondoRojoProp = false,
   statusActual = 0,
 }) {
