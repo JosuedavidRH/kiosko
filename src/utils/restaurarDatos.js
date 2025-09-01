@@ -3,7 +3,6 @@
 
 //este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\utils\restaurarDatos.js" solo analizalo no modifiques nada  
 
-
 export const restaurarDatos = async ({
   apartmentNumber,
   setTimeLeft,
@@ -16,17 +15,26 @@ export const restaurarDatos = async ({
     const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
     const data = await res.json();
 
+    // 👇 LOG para depuración
+    console.log("🔍 Datos recibidos del backend:", data);
+
     if (!data.success || !data.data) {
       const keysToRemove = [
-        'clicked','codigos','factura1Terminada','factura2Terminada','factura3Terminada',
-        'indexActual','timeLeftFactura1','timerStarted'
+        "clicked",
+        "codigos",
+        "factura1Terminada",
+        "factura2Terminada",
+        "factura3Terminada",
+        "indexActual",
+        "timeLeftFactura1",
+        "timerStarted",
       ];
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
 
       setTimeLeft(43200);
       setFondoRojo(false);
       setClickCount(0);
-      localStorage.setItem('clickCount', 0);
+      localStorage.setItem("clickCount", 0);
 
       if (restart) {
         const exp = new Date();
@@ -41,7 +49,7 @@ export const restaurarDatos = async ({
     const statusNum = statusActual != null ? Number(statusActual) : 0;
 
     setClickCount(statusNum);
-    localStorage.setItem('clickCount', statusNum);
+    localStorage.setItem("clickCount", statusNum);
 
     if (statusNum === 0 || temporizadorPrincipal == null) {
       setTimeLeft(43200);
@@ -57,6 +65,11 @@ export const restaurarDatos = async ({
       const horaCierre = new Date(updated_at).getTime();
       const tiempoTranscurrido = Math.floor((Date.now() - horaCierre) / 1000);
       const tiempoRestante = tiempoGuardado - tiempoTranscurrido;
+
+      // 👇 LOG para depurar valores calculados
+      console.log("⏱ temporizadorPrincipal:", temporizadorPrincipal);
+      console.log("⏳ tiempoTranscurrido:", tiempoTranscurrido);
+      console.log("⏰ tiempoRestante:", tiempoRestante);
 
       if (!isNaN(tiempoRestante) && tiempoRestante > 0) {
         setTimeLeft(tiempoRestante);
