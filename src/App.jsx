@@ -10,10 +10,6 @@ import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Login from './Login.jsx';
 import Register from './Register.jsx';
 
-//import TemporizadorPrincipal from './TemporizadorPrincipal.jsx';
-
-//import TemporizadorPrincipalReact from "./TemporizadorPrincipalReact.jsx";
-
 import TemporizadorFactura1 from './TemporizadorFactura1';
 import TemporizadorFactura2 from './TemporizadorFactura2';
 import TemporizadorFactura3 from './TemporizadorFactura3';
@@ -30,7 +26,6 @@ import { TemporizadorProvider } from "./context/TemporizadorContext.jsx"; // ✅
 
 
 
-
 function App() {
   const [user, setUser] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -38,6 +33,8 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const location = useLocation();
+
+  const { timeLeft, formatTimeLeft } = useTemporizador();
 
  
 
@@ -188,9 +185,22 @@ function AppContent({
   setApartmentNumber      // ✅ necesario para cerrar sesión manual
 }) {
 
-  const navigate = useNavigate();
-  const { timeLeft, setTimeLeft, fondoRojo, setFondoRojo, startCountdown, isRunning } = useTemporizador();
-  const { minutes, seconds, stopAndPersist } = useTemporizador();
+  
+ const navigate = useNavigate();
+
+  const { 
+    timeLeft, 
+    setTimeLeft, 
+    fondoRojo, 
+    setFondoRojo, 
+    startCountdown, 
+    isRunning, 
+    formatTimeLeft,   // ✅ ahora sí lo extraemos
+    stopAndPersist 
+  } = useTemporizador();
+
+
+
   // Restaurar datos desde backend
   useEffect(() => {
     if (apartmentNumber) {
@@ -216,7 +226,7 @@ useEffect(() => {
     // 1️⃣ Enviar al backend ANTES de limpiar estado
     await cerrarSesionGlobal({
       auto: true,
-      temporizadorPrincipal: minutes * 60 + seconds,
+      temporizadorPrincipal:timeLeft,
       statusActual: clickCount,
       userId: apartmentNumber,
     });
@@ -235,7 +245,7 @@ useEffect(() => {
 
   window.addEventListener("beforeunload", handleBeforeUnload);
   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-}, [apartmentNumber, minutes, seconds, clickCount]);
+}, [apartmentNumber, timeLeft, clickCount]);
 
 
   // 🚨 Botón manual "Cerrar sesión"
@@ -246,7 +256,7 @@ useEffect(() => {
   // 1️⃣ Enviar al backend ANTES de limpiar estado
   await cerrarSesionGlobal({
     auto: false,
-    temporizadorPrincipal: minutes * 60 + seconds,
+    temporizadorPrincipal:timeLeft,
     statusActual: clickCount,
     userId: apartmentNumber,
   });
@@ -258,6 +268,8 @@ useEffect(() => {
   // 3️⃣ Recargar para asegurar que todo queda limpio
   window.location.reload();
 };
+
+
 
 
   return (
@@ -277,14 +289,28 @@ useEffect(() => {
               padding: "20px",
               textAlign: "center",
             }}
+
+
+
           >
             <h1 style={{ fontSize: "20px" }}>
               Hola, {user}! Apto: {apartmentNumber}
             </h1>
 
             {clickCount > 0 && (
+
               <div style={{ fontSize: "21px", fontWeight: "bold" }}>
-                Tiempo restante: {timeLeft} seg
+               
+              PLAZO DE PAGO {formatTimeLeft(timeLeft)}
+
+             <FaClock
+              style={{
+                fontSize: "2.0rem",
+                color: "white",
+                animation: "pulse 1s infinite",
+                marginBottom: "5px",
+              }}
+            />
               </div>
             )}
             

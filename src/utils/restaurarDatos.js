@@ -23,14 +23,14 @@ export const restaurarDatos = async ({
       ];
       keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      setTimeLeft(60);
+      setTimeLeft(43200);
       setFondoRojo(false);
       setClickCount(0);
       localStorage.setItem('clickCount', 0);
 
       if (restart) {
         const exp = new Date();
-        exp.setSeconds(exp.getSeconds() + 60);
+        exp.setSeconds(exp.getSeconds() + 43200);
         restart(exp, false);
       }
 
@@ -44,12 +44,12 @@ export const restaurarDatos = async ({
     localStorage.setItem('clickCount', statusNum);
 
     if (statusNum === 0 || temporizadorPrincipal == null) {
-      setTimeLeft(60);
+      setTimeLeft(43200);
       setFondoRojo(false);
 
       if (restart) {
         const exp = new Date();
-        exp.setSeconds(exp.getSeconds() + 60);
+        exp.setSeconds(exp.getSeconds() + 43200);
         restart(exp, false);
       }
     } else {
@@ -80,12 +80,12 @@ export const restaurarDatos = async ({
     }
   } catch (error) {
     console.error("❌ Error al obtener datos iniciales:", error);
-    setTimeLeft(60);
+    setTimeLeft(43200);
     setFondoRojo(false);
 
     if (restart) {
       const exp = new Date();
-      exp.setSeconds(exp.getSeconds() + 60);
+      exp.setSeconds(exp.getSeconds() + 43200);
       restart(exp, false);
     }
   }

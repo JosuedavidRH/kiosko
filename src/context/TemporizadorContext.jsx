@@ -5,7 +5,6 @@
 
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useTimer } from "react-timer-hook";
 import { cerrarSesionGlobal } from "../utils/cerrarSesion";
 
 export const TemporizadorContext = createContext();
@@ -15,73 +14,73 @@ export function TemporizadorProvider({
   apartmentNumber,
   initialTime = 60,
   timeLeft = 60,
-  timerStarted = false,
   fondoRojo: fondoRojoProp = false,
   statusActual = 0,
 }) {
   const [fondoRojo, setFondoRojo] = useState(!!fondoRojoProp);
   const [timeLeftState, setTimeLeftState] = useState(timeLeft);
+  const [isRunning, setIsRunning] = useState(false);
 
-  // Crear expiry inicial
-  const initialExpiry = new Date();
-  initialExpiry.setSeconds(initialExpiry.getSeconds() + Math.max(timeLeftState, 1));
-
-  const { seconds, minutes, restart, pause, resume, isRunning } = useTimer({
-    expiryTimestamp: initialExpiry,
-    autoStart: false,
-    onExpire: () => {
-      setFondoRojo(true);
-      if (apartmentNumber) {
-        cerrarSesionGlobal({
-          auto: false,
-          temporizadorPrincipal: 0,
-          userId: apartmentNumber,
-          statusActual,
-        });
-      }
-    },
-  });
-
-  // Bootstrap: arranca automáticamente si queda tiempo
+  // 🔹 Arranca el contador si hay tiempo
   useEffect(() => {
-    const secs = Number(timeLeftState) || 0;
-    setFondoRojo(!!fondoRojoProp);
-
-    const exp = new Date();
-    exp.setSeconds(exp.getSeconds() + Math.max(secs, 0));
-
-    if (secs > 0) restart(exp, true);
-    else {
-      restart(exp, false);
+    if (timeLeftState > 0) {
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
       setFondoRojo(true);
     }
-  }, [timeLeftState, fondoRojoProp, restart]);
+  }, [timeLeftState]);
 
-  // Persistir automáticamente cada 15s mientras el timer corre
+  // 🔹 Interval que descuenta cada segundo
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const interval = setInterval(() => {
+      setTimeLeftState((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsRunning(false);
+          setFondoRojo(true);
+
+          if (apartmentNumber) {
+            cerrarSesionGlobal({
+              auto: false,
+              temporizadorPrincipal: 0,
+              userId: apartmentNumber,
+              statusActual,
+            });
+          }
+
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning, apartmentNumber, statusActual]);
+
+  // 🔹 Persistir automáticamente cada 15s mientras corre
   useEffect(() => {
     if (!apartmentNumber || !isRunning) return;
 
     const interval = setInterval(() => {
       cerrarSesionGlobal({
         auto: false,
-        temporizadorPrincipal: minutes * 60 + seconds,
+        temporizadorPrincipal: timeLeftState,
         userId: apartmentNumber,
         statusActual,
       });
-    }, 15000); // cada 15 segundos
+    }, 15000);
 
     return () => clearInterval(interval);
-  }, [apartmentNumber, isRunning, minutes, seconds, statusActual]);
-
-  
+  }, [apartmentNumber, isRunning, timeLeftState, statusActual]);
 
   // Helpers
-  const startCountdown = (secondsToRun = 60) => {
-    const exp = new Date();
-    exp.setSeconds(exp.getSeconds() + Math.max(secondsToRun, 1));
-    setFondoRojo(false);
-    restart(exp, true);
+  const startCountdown = (secondsToRun = initialTime) => {
     setTimeLeftState(secondsToRun);
+    setFondoRojo(false);
+    setIsRunning(true);
 
     if (apartmentNumber) {
       cerrarSesionGlobal({
@@ -94,32 +93,40 @@ export function TemporizadorProvider({
   };
 
   const stopAndPersist = () => {
-    pause();
+    setIsRunning(false);
     if (apartmentNumber) {
       cerrarSesionGlobal({
         auto: false,
-        temporizadorPrincipal: minutes * 60 + seconds,
+        temporizadorPrincipal: timeLeftState,
         userId: apartmentNumber,
         statusActual,
       });
     }
   };
 
+  // ✅ Formato HH:mm:ss
+  const formatTimeLeft = (totalSeconds) => {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(
+      2,
+      "0"
+    )}:${String(s).padStart(2, "0")}`;
+  };
+
   return (
     <TemporizadorContext.Provider
       value={{
-        minutes,
-        seconds,
-        timeLeft: minutes * 60 + seconds,
+        timeLeft: timeLeftState,
         setTimeLeft: setTimeLeftState,
         isRunning,
-        pause,
-        resume,
-        restart,
         startCountdown,
         stopAndPersist,
         fondoRojo,
         setFondoRojo,
+        formatTimeLeft,
       }}
     >
       {children}
