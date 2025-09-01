@@ -1,7 +1,17 @@
+
+
+//CODIGO en produccion 
+
+//este es mi archivo "C:\Users\user\projects2\myapp2\kiosko_local\src\SegundaPagina.jsx" solo analizalo no modifiques nada  
+
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
-  
+
+// IMPORTAMOS restaurarDatos
+import { restaurarDatos2 } from "./utils/restaurarDatos2"; 
+
 function generarTresCodigos() {
   return Array.from({ length: 3 }, () =>
     Math.floor(100000 + Math.random() * 900000).toString()
@@ -18,32 +28,79 @@ function SegundaPagina() {
   const [codigos, setCodigos] = useState([]);
   const [indexActual, setIndexActual] = useState(0);
 
-  // Cargar datos desde localStorage y reiniciar si ya terminó la tanda de 3
+  // 🔹 Intentamos restaurar datos primero
   useEffect(() => {
     if (!user) {
       navigate('/');
       return;
     }
 
-    const codigosGuardados = JSON.parse(localStorage.getItem('codigos'));
-    const indexGuardado = parseInt(localStorage.getItem('indexActual'), 10);
+    const cargarDatos = async () => {
+      try {
+        // 🔹 1) PRIORIDAD: Si BotonPrincipal mandó codigos en navigate()
+        const codigosState = location.state?.codigos;
 
-    if (
-      codigosGuardados &&
-      Array.isArray(codigosGuardados) &&
-      !isNaN(indexGuardado) &&
-      indexGuardado < 3
-    ) {
-      setCodigos(codigosGuardados);
-      setIndexActual(indexGuardado);
-    } else {
-      const nuevos = generarTresCodigos();
-      setCodigos(nuevos);
-      setIndexActual(0);
-      localStorage.setItem('codigos', JSON.stringify(nuevos));
-      localStorage.setItem('indexActual', '0');
-    }
-  }, [user, navigate]);
+        if (codigosState && Array.isArray(codigosState)) {
+          console.log("✅ Restaurando datos desde state:", codigosState);
+
+          setCodigos(codigosState);
+
+          // ✅ Siempre arrancamos desde el primer código
+          setIndexActual(0);
+
+          // Guardar en localStorage para consistencia
+          localStorage.setItem('codigos', JSON.stringify(codigosState));
+          localStorage.setItem('indexActual', '0');
+          return; // 🔥 Importante: No seguimos al backend si ya tenemos los códigos válidos
+        }
+
+        // 🔹 2) Si no vienen en state, intentamos restaurar desde backend
+        const restaurados = await restaurarDatos2(user);
+
+        if (restaurados && restaurados.codigos?.length > 0) {
+          console.log("✅ Restaurando datos desde backend:", restaurados);
+
+          setCodigos(restaurados.codigos);
+
+          // ✅ Siempre arrancamos desde el primer código
+          setIndexActual(0);
+
+          localStorage.setItem("codigos", JSON.stringify(restaurados.codigos));
+          localStorage.setItem("indexActual", "0");
+        } else {
+          // 🔹 3) Si no hay en backend, revisamos localStorage
+          const codigosGuardados = JSON.parse(localStorage.getItem('codigos'));
+          const indexGuardado = parseInt(localStorage.getItem('indexActual'), 10);
+
+          if (
+            codigosGuardados &&
+            Array.isArray(codigosGuardados) &&
+            !isNaN(indexGuardado) &&
+            indexGuardado < 3
+          ) {
+            setCodigos(codigosGuardados);
+
+            // ✅ Siempre arrancamos desde el primer código
+            setIndexActual(0);
+
+            localStorage.setItem('codigos', JSON.stringify(codigosGuardados));
+            localStorage.setItem('indexActual', '0');
+          } else {
+            // 🔹 4) Si tampoco hay, generamos nuevos
+            const nuevos = generarTresCodigos();
+            setCodigos(nuevos);
+            setIndexActual(0);
+            localStorage.setItem('codigos', JSON.stringify(nuevos));
+            localStorage.setItem('indexActual', '0');
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error al cargar datos:", error);
+      }
+    };
+
+    cargarDatos();
+  }, [user, navigate, location.state]);
 
   const qrActual = codigos[indexActual];
 

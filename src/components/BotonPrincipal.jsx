@@ -4,11 +4,10 @@
 //este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\components\BotonPrincipal.jsx" solo analizalo no modifiques nada  
 
 
-
-import React from "react";
+import React from "react"; 
 import { useNavigate } from "react-router-dom";
 import { guardarStatusActual } from "../utils/guardarStatusActual";
-import { useTemporizador } from "../context/TemporizadorContext.jsx"; // Integrar temporizador nuevo
+import { useTemporizador } from "../context/TemporizadorContext.jsx";
 
 const BotonPrincipal = ({
   clickCount,
@@ -24,83 +23,125 @@ const BotonPrincipal = ({
   const handleClick = async () => {
     setIsProcessing(true);
 
+    // índice que DEBEMOS mostrar en /segunda (antes de incrementar clickCount)
+    const indexToShow = clickCount;
+
     if (clickCount === 0) {
       try {
-        // Generar 3 códigos aleatorios
-        const nuevosCodigos = Array.from({ length: 3 }, () =>
-          Math.floor(100000 + Math.random() * 900000).toString()
-        );
+        // Consultar backend
+        const resp = await fetch(`https://backend-1uwd.onrender.com/api/guardar/recuperar/${apartmentNumber}`);
+        const data = await resp.json();
+        const hayCodigos = data.success && data.data && data.data.length > 0;
 
-        // Guardar en localStorage
-        localStorage.setItem("codigos", JSON.stringify(nuevosCodigos));
-        localStorage.setItem("indexActual", "0");
+        if (hayCodigos) {
+          console.log("⚠️ Ya existen códigos en BD, no se generan nuevos.");
+          const codigosBD = data.data.map(item => item.codigo_qr);
 
-        // Enviar a la BD
-        for (const codigo of nuevosCodigos) {
-          const payload = {
-            numero_apto: apartmentNumber,
-            codigo_generado: codigo,
-          };
-          console.log("📤 Enviando a guardar_numero:", payload);
+          // Guardar provisionalmente en localStorage (fuente: backend)
+          localStorage.setItem("codigos", JSON.stringify(codigosBD));
+          // Guardamos el índice correcto a mostrar (no forzamos 0 si ya existe)
+          localStorage.setItem("indexActual", String(indexToShow));
 
-          await fetch("https://backend-1uwd.onrender.com/api/guardar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+          // Avanzar estado
+          const nuevoEstado = (clickCount + 1) % 4;
+          setClickCount(nuevoEstado);
+          guardarStatusActual(nuevoEstado, apartmentNumber);
+
+          // Pasamos también los códigos y el índice en el state para mayor consistencia
+          navigate("/segunda", { state: { user: apartmentNumber, codigos: codigosBD, indexActual: indexToShow } });
+        } else {
+          console.log("✅ No hay códigos en BD, generando nuevos...");
+
+          const nuevosCodigos = Array.from({ length: 3 }, () =>
+            Math.floor(100000 + Math.random() * 900000).toString()
+          );
+
+          // Guardar provisionalmente (fuente: generador)
+          localStorage.setItem("codigos", JSON.stringify(nuevosCodigos));
+          localStorage.setItem("indexActual", String(indexToShow)); // importante: index correcto
+
+          // Enviar a la BD (esperamos cada POST)
+          for (const codigo of nuevosCodigos) {
+            const payload = {
+              numero_apto: apartmentNumber,
+              codigo_generado: codigo,
+            };
+            console.log("📤 Enviando a guardar_numero:", payload);
+
+            await fetch("https://backend-1uwd.onrender.com/api/guardar", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          }
+
+          // Guardar temporizador en backend si aplica
+          const timeLeftLocal = parseInt(localStorage.getItem("timeLeftPrincipal"), 10);
+          const tiempoARegistrar =
+            Number.isFinite(timeLeftLocal) && timeLeftLocal > 0
+              ? timeLeftLocal
+              : initialTime && initialTime > 0
+              ? initialTime
+              : 60;
+
+          try {
+            const payloadTemp = {
+              userId: apartmentNumber,
+              temporizadorPrincipal: tiempoARegistrar,
+            };
+            await fetch("https://backend-1uwd.onrender.com/api/realTime/temporizador", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payloadTemp),
+            });
+          } catch (error) {
+            console.error("❌ Error al guardar temporizador en backend:", error);
+          }
+
+          startCountdown(tiempoARegistrar);
+
+          const nuevoEstado = (clickCount + 1) % 4;
+          setClickCount(nuevoEstado);
+          guardarStatusActual(nuevoEstado, apartmentNumber);
+
+          // Navegamos pasando los códigos generados y el índice
+          navigate("/segunda", { state: { user: apartmentNumber, codigos: nuevosCodigos, indexActual: indexToShow } });
         }
-
-        // Determinar tiempo a registrar
-        const timeLeftLocal = parseInt(localStorage.getItem("timeLeftPrincipal"), 10);
-        const tiempoARegistrar =
-          Number.isFinite(timeLeftLocal) && timeLeftLocal > 0
-            ? timeLeftLocal
-            : initialTime && initialTime > 0
-            ? initialTime
-            : 60;
-
-        // Guardar tiempo en backend
-        try {
-          const payloadTemp = {
-            userId: apartmentNumber,
-            temporizadorPrincipal: tiempoARegistrar,
-          };
-          console.log("⏱️ Guardando temporizadorPrincipal en backend:", payloadTemp);
-
-          const resp = await fetch("https://backend-1uwd.onrender.com/api/realTime/temporizador", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payloadTemp),
-          });
-
-          const json = await resp.json().catch(() => ({}));
-          console.log("🔁 Respuesta temporizador:", resp.status, json);
-        } catch (error) {
-          console.error("❌ Error al guardar temporizador en backend:", error);
-        }
-
-        // Iniciar temporizador en contexto
-        startCountdown(tiempoARegistrar);
-        console.log("🚀 temporizadorPrincipal activado con:", tiempoARegistrar);
-
-        // Actualizar click count y status
-        const nuevoEstado = (clickCount + 1) % 4;
-        setClickCount(nuevoEstado);
-        guardarStatusActual(nuevoEstado, apartmentNumber);
-
-        navigate("/segunda", { state: { user: apartmentNumber } });
       } catch (error) {
-        console.error("❌ Error general al generar y guardar códigos:", error);
+        console.error("❌ Error general en handleClick:", error);
+      }
+    } else if (clickCount === 1 || clickCount === 2) {
+      try {
+        // Recuperar SIEMPRE desde backend
+        const resp = await fetch(`https://backend-1uwd.onrender.com/api/guardar/recuperar/${apartmentNumber}`);
+        const data = await resp.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+          console.log("📥 Recuperando códigos desde backend:", data.data);
+          const codigosBD = data.data.map(item => item.codigo_qr);
+
+          // Guardamos en localStorage y aseguramos indexActual = indexToShow
+          localStorage.setItem("codigos", JSON.stringify(codigosBD));
+          localStorage.setItem("indexActual", String(indexToShow));
+
+          // Avanzar estado
+          const nuevoEstado = (clickCount + 1) % 4;
+          setClickCount(nuevoEstado);
+          guardarStatusActual(nuevoEstado, apartmentNumber);
+
+          // Navegamos pasando el array y el índice para que SegundaPagina lo muestre exactamente
+          navigate("/segunda", { state: { user: apartmentNumber, codigos: codigosBD, indexActual: indexToShow } });
+        } else {
+          console.warn("⚠️ No se encontraron códigos en backend para este usuario.");
+        }
+      } catch (error) {
+        console.error("❌ Error recuperando códigos en clickCount 1 o 2:", error);
       }
     } else {
-      // Avanzar click count y guardar status
+      // clickCount === 3 --> no más compras
       const nuevoEstado = (clickCount + 1) % 4;
       setClickCount(nuevoEstado);
       guardarStatusActual(nuevoEstado, apartmentNumber);
-
-      if (clickCount < 3) {
-        navigate("/segunda", { state: { user: apartmentNumber } });
-      }
     }
 
     setIsProcessing(false);

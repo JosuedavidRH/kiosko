@@ -3,8 +3,9 @@
 
 //este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\components\contenedoresPaginaPrincipal.jsx" solo analizalo no modifiques nada  
 
+
 import React from "react";
-import { FaClock } from "react-icons/fa";
+//import { FaClock } from "react-icons/fa";
 import TemporizadorFactura1 from "../TemporizadorFactura1";
 import TemporizadorFactura2 from "../TemporizadorFactura2";
 import TemporizadorFactura3 from "../TemporizadorFactura3";
@@ -44,14 +45,7 @@ const ContenedoresPaginaPrincipal = ({
               alignItems: "center",
             }}
           >
-            <FaClock
-              style={{
-                fontSize: "2.8rem",
-                color: "white",
-                animation: "pulse 1s infinite",
-                marginBottom: "5px",
-              }}
-            />
+            
             <span style={{ fontSize: "0.7rem", color: "white" }}>
               ESPERA TUS FACTURAS
             </span>
@@ -65,8 +59,8 @@ const ContenedoresPaginaPrincipal = ({
           style={{
             display: "flex",
             justifyContent: "center",
-            transform: "translateY(-80px)",
-            marginLeft: "-190px",
+            transform: "translateY(-50px)",
+            marginLeft: "-210px",
           }}
         >
           <div
@@ -104,7 +98,7 @@ const ContenedoresPaginaPrincipal = ({
             display: "flex",
             justifyContent: "center",
             transform: "translateY(-210px)",
-            marginLeft: "160px",
+            marginLeft: "170px",
           }}
         >
           <div
@@ -177,7 +171,7 @@ const ContenedoresPaginaPrincipal = ({
             display: "flex",
             justifyContent: "center",
             transform: "translateY(-200px)",
-            marginLeft: "160px",
+            marginLeft: "170px",
           }}
         >
           <div
@@ -250,7 +244,7 @@ const ContenedoresPaginaPrincipal = ({
             display: "flex",
             justifyContent: "center",
             transform: "translateY(-190px)",
-            marginLeft: "160px",
+            marginLeft: "170px",
           }}
         >
           <div
