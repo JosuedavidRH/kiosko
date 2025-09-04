@@ -1,38 +1,26 @@
-import React, { useEffect, useState } from 'react';
+//CODIGO en produccion 
+
+
+
+
+import React, { useEffect } from "react";
+import { useTemporizadorFactura1 } from "./context/TemporizadorFactura1Context";
 
 function TemporizadorFactura1({ onFinish }) {
-  const [timeLeft, setTimeLeft] = useState(() => {
-    const saved = localStorage.getItem('timeLeftFactura1');
-    return saved !== null ? Number(saved) : 1 * 60;
-  });
+  const { timeLeftFactura1, formatTimeFactura1 } = useTemporizadorFactura1();
 
+  // Avisar cuando termine
   useEffect(() => {
-    if (timeLeft <= 0) {
-      if (onFinish) onFinish();
-      return;
+    if (timeLeftFactura1 <= 0 && onFinish) {
+      onFinish();
     }
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, onFinish]);
-
-  // Sincronizar con localStorage
-  useEffect(() => {
-    localStorage.setItem('timeLeftFactura1', timeLeft);
-  }, [timeLeft]);
-
-  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-  const seconds = String(timeLeft % 60).padStart(2, '0');
+  }, [timeLeftFactura1, onFinish]);
 
   return (
-    <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-      {minutes}:{seconds}
+    <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+      {formatTimeFactura1(timeLeftFactura1)}
     </span>
   );
 }
 
 export default TemporizadorFactura1;
-

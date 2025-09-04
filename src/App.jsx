@@ -22,7 +22,11 @@ import { restaurarDatos } from "./utils/restaurarDatos";
 import ContenedoresPaginaPrincipal from "./components/contenedoresPaginaPrincipal";
 import BotonPrincipal from "./components/BotonPrincipal";
 import { useTemporizador } from "./context/TemporizadorContext.jsx";
-import { TemporizadorProvider } from "./context/TemporizadorContext.jsx"; // ✅ correcto
+import { TemporizadorProvider } from "./context/TemporizadorContext.jsx"; 
+import { TemporizadorFactura1Provider } from "./context/TemporizadorFactura1Context";
+import { TemporizadorFactura2Provider } from "./context/TemporizadorFactura2Context";
+import { TemporizadorFactura3Provider } from "./context/TemporizadorFactura3Context";
+
 
 
 
@@ -99,6 +103,9 @@ function App() {
       timerStarted={timerStarted}
       statusActual={clickCount}
     >
+    <TemporizadorFactura1Provider initialTime={60}> 
+    <TemporizadorFactura2Provider initialTime={60}>
+    <TemporizadorFactura3Provider initialTime={60}>
 
 
     <AppContent 
@@ -124,6 +131,10 @@ function App() {
   //setTimerStarted={setTimerStarted}
  
 />
+
+  </TemporizadorFactura3Provider>
+  </TemporizadorFactura2Provider>
+  </TemporizadorFactura1Provider> 
 
  </TemporizadorProvider>
 
