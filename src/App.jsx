@@ -26,6 +26,10 @@ import { TemporizadorProvider } from "./context/TemporizadorContext.jsx";
 import { TemporizadorFactura1Provider } from "./context/TemporizadorFactura1Context";
 import { TemporizadorFactura2Provider } from "./context/TemporizadorFactura2Context";
 import { TemporizadorFactura3Provider } from "./context/TemporizadorFactura3Context";
+import { useTemporizadorFactura1 } from './context/TemporizadorFactura1Context';
+import { useTemporizadorFactura2 } from './context/TemporizadorFactura2Context';
+import { useTemporizadorFactura3 } from './context/TemporizadorFactura3Context';
+
 
 
 
@@ -35,7 +39,7 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [apartmentNumber, setApartmentNumber] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
+ 
   const location = useLocation();
 
   const { timeLeft, formatTimeLeft } = useTemporizador();
@@ -103,10 +107,10 @@ function App() {
       timerStarted={timerStarted}
       statusActual={clickCount}
     >
-    <TemporizadorFactura1Provider initialTime={60}> 
-    <TemporizadorFactura2Provider initialTime={60}>
-    <TemporizadorFactura3Provider initialTime={60}>
-
+     
+     <TemporizadorFactura1Provider initialTime={60}> 
+     <TemporizadorFactura2Provider initialTime={60}>
+     <TemporizadorFactura3Provider initialTime={60}>
 
     <AppContent 
   user={user}
@@ -135,8 +139,7 @@ function App() {
   </TemporizadorFactura3Provider>
   </TemporizadorFactura2Provider>
   </TemporizadorFactura1Provider> 
-
- </TemporizadorProvider>
+  </TemporizadorProvider>
 
 
  ) : isRegistering ? (
@@ -198,6 +201,10 @@ function AppContent({
 
   
  const navigate = useNavigate();
+ const { timeLeftFactura1 } = useTemporizadorFactura1();
+ const { timeLeftFactura2 } = useTemporizadorFactura2();
+ const { timeLeftFactura3 } = useTemporizadorFactura3();
+
 
   const { 
     timeLeft, 
@@ -225,9 +232,19 @@ function AppContent({
     }
   }, [apartmentNumber]);
 
-  
 
- // 🛑 Botón automático "Cerrar sesión" al cerrar pestaña o actualizar 
+useEffect(() => {
+  localStorage.setItem("timeLeftFactura2", timeLeftFactura2);
+}, [timeLeftFactura2]);
+
+useEffect(() => {
+  localStorage.setItem("timeLeftFactura3", timeLeftFactura3);
+}, [timeLeftFactura3]);
+
+
+
+
+  // 🛑 Botón automático "Cerrar sesión" al cerrar pestaña o actualizar 
 useEffect(() => {
   if (!apartmentNumber) return;
 
@@ -237,7 +254,10 @@ useEffect(() => {
     // 1️⃣ Enviar al backend ANTES de limpiar estado
     await cerrarSesionGlobal({
       auto: true,
-      temporizadorPrincipal:timeLeft,
+      temporizadorPrincipal: timeLeft,
+      temporizadorFactura1: timeLeftFactura1, // ✅ agregado
+      temporizadorFactura2: timeLeftFactura2, // ✅ agregado
+      temporizadorFactura3: timeLeftFactura3, // ✅ agregado
       statusActual: clickCount,
       userId: apartmentNumber,
     });
@@ -256,18 +276,23 @@ useEffect(() => {
 
   window.addEventListener("beforeunload", handleBeforeUnload);
   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-}, [apartmentNumber, timeLeft, clickCount]);
+}, [apartmentNumber, timeLeft, timeLeftFactura1,timeLeftFactura2,timeLeftFactura3, clickCount]);
 
 
-  // 🚨 Botón manual "Cerrar sesión"
 
- const handleCerrarSesion = async () => {
+
+
+// 🚨 Botón manual "Cerrar sesión"
+const handleCerrarSesion = async () => {
   console.log("👋 Cerrando sesión manual...");
 
   // 1️⃣ Enviar al backend ANTES de limpiar estado
   await cerrarSesionGlobal({
     auto: false,
-    temporizadorPrincipal:timeLeft,
+    temporizadorPrincipal: timeLeft,
+    temporizadorFactura1: timeLeftFactura1, // ✅ agregado
+    temporizadorFactura2: timeLeftFactura2, // ✅ agregado
+    temporizadorFactura3: timeLeftFactura3, // ✅ agregado
     statusActual: clickCount,
     userId: apartmentNumber,
   });
