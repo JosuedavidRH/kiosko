@@ -1,7 +1,8 @@
 
 //CODIGO en produccion 
 
-//este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\utils\cerrarSesion.js" solo analizalo no modifiques nada  
+
+// C:\Users\user\projects2\myapp2\kiosko_local\src\utils\cerrarSesion.js
 
 export const cerrarSesionGlobal = ({
   auto = false,
@@ -48,34 +49,21 @@ export const cerrarSesionGlobal = ({
       ? temporizadorFactura3
       : Number(localStorage.getItem("timeLeftFactura3")) || 0;
 
-  // Payloads
-  const bodyTemp = JSON.stringify({ userId, temporizadorPrincipal: temp });
-  const bodyStatus = JSON.stringify({ userId, statusActual: status });
-  const bodyFactura1 = JSON.stringify({ userId, temporizadorFactura1: tempFactura1 });
-  const bodyFactura2 = JSON.stringify({ userId, temporizadorFactura2: tempFactura2 });
-  const bodyFactura3 = JSON.stringify({ userId, temporizadorFactura3: tempFactura3 });
+  // Payload único para todos los datos
+  const body = JSON.stringify({
+    userId,
+    temporizadorPrincipal: temp,
+    statusActual: status,
+    temporizadorFactura1: tempFactura1,
+    temporizadorFactura2: tempFactura2,
+    temporizadorFactura3: tempFactura3,
+  });
 
   try {
     if (auto && navigator.sendBeacon) {
       navigator.sendBeacon(
-        "",
-        new Blob([bodyTemp], { type: "application/json" })
-      );
-      navigator.sendBeacon(
-        "https://backend-1uwd.onrender.com/api/realTime/statusActual",
-        new Blob([bodyStatus], { type: "application/json" })
-      );
-      navigator.sendBeacon(
-        "https://backend-1uwd.onrender.com/api/realTime/temporizadorFactura1",
-        new Blob([bodyFactura1], { type: "application/json" })
-      );
-      navigator.sendBeacon(
-        " https://backend-1uwd.onrender.com/api/realTime/temporizadorFactura2",
-        new Blob([bodyFactura2], { type: "application/json" })
-      );
-      navigator.sendBeacon(
-        "https://backend-1uwd.onrender.com/api/realTime/temporizadorFactura3",
-        new Blob([bodyFactura3], { type: "application/json" })
+        "https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", // 👈 NUEVO endpoint unificado en backend local
+        new Blob([body], { type: "application/json" })
       );
 
       console.log("📡 Datos enviados con sendBeacon (auto)", {
@@ -92,38 +80,10 @@ export const cerrarSesionGlobal = ({
     }
 
     // Manual con fetch
-    fetch("https://backend-1uwd.onrender.com/api/realTime/temporizador", {
+    fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: bodyTemp,
-      keepalive: true,
-    });
-
-    fetch("https://backend-1uwd.onrender.com/api/realTime/statusActual", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: bodyStatus,
-      keepalive: true,
-    });
-
-    fetch("https://backend-1uwd.onrender.com/api/realTime/temporizadorFactura1", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: bodyFactura1, 
-      keepalive: true,
-    });
-
-    fetch(" https://backend-1uwd.onrender.com/api/realTime/temporizadorFactura2", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: bodyFactura2,
-      keepalive: true,
-    });
-
-    fetch("https://backend-1uwd.onrender.com/api/realTime/temporizadorFactura3", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: bodyFactura3,
+      body,
       keepalive: true,
     });
 
@@ -143,4 +103,3 @@ export const cerrarSesionGlobal = ({
     }
   }
 };
-
