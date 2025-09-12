@@ -1,7 +1,7 @@
 
 //CODIGO en produccion 
 
-//este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\utils\restaurarDatos.js" solo analizalo no modifiques nada  
+//este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\utils\restaurarDatos.js" solo analizalo no modifiques nada 
 
 export const restaurarDatos = async ({
   apartmentNumber,
@@ -22,7 +22,7 @@ export const restaurarDatos = async ({
   startFactura3,  
 }) => {
   try {
-    const res = await fetch(`http://localhost:4000/api/realtime/${apartmentNumber}`);
+    const res = await fetch(`https://backend-1uwd.onrender.com/api/realTime/${apartmentNumber}`);
     const data = await res.json();
 
     // 👇 LOG para depuración
