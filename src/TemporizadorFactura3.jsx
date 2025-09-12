@@ -1,5 +1,6 @@
 //CODIGO en produccion 
 
+
 import React, { useEffect } from "react";
 import { useTemporizadorFactura3 } from "./context/TemporizadorFactura3Context";
 
@@ -11,19 +12,19 @@ function TemporizadorFactura3({ onFinish }) {
     startFactura3,
   } = useTemporizadorFactura3();
 
-  // 🚀 Arranca automáticamente cuando el componente se monta
+  // 🚀 Solo arranca si hay tiempo > 0 y no está corriendo
   useEffect(() => {
-    if (!isRunningFactura3) {
-      startFactura3();
+    if (!isRunningFactura3 && timeLeftFactura3 > 0) {
+      startFactura3(timeLeftFactura3); 
     }
-  }, [isRunningFactura3, startFactura3]);
+  }, [isRunningFactura3, timeLeftFactura3, startFactura3]);
 
-  // Detecta cuando termina
+  // Detecta cuando termina o ya está en 0 al montar
   useEffect(() => {
-    if (timeLeftFactura3 <= 0 && isRunningFactura3) {
+    if (timeLeftFactura3 <= 0) {
       if (onFinish) onFinish();
     }
-  }, [timeLeftFactura3, isRunningFactura3, onFinish]);
+  }, [timeLeftFactura3, onFinish]);
 
   return (
     <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>

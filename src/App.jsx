@@ -114,9 +114,9 @@ function App() {
 
     <AppContent 
   user={user}
-  setUser={setUser}                     // ✅ agregar
+  setUser={setUser}                    
   apartmentNumber={apartmentNumber}
-   setApartmentNumber={setApartmentNumber} // ✅ agregar
+   setApartmentNumber={setApartmentNumber} 
   clicked={clicked}
   setClicked={setClicked}
   clickCount={clickCount}
@@ -129,8 +129,8 @@ function App() {
   setFactura2Terminada={setFactura2Terminada}
   factura3Terminada={factura3Terminada}
   setFactura3Terminada={setFactura3Terminada}
-  isProcessing={isProcessing}          // ✅
-  setIsProcessing={setIsProcessing}    // ✅
+  isProcessing={isProcessing}          
+  setIsProcessing={setIsProcessing}    
   //timerStarted={timerStarted}
   //setTimerStarted={setTimerStarted}
  
@@ -145,16 +145,16 @@ function App() {
  ) : isRegistering ? (
   <Register 
     onRegister={({ username, apartmentNumber }) => {
-      console.log("onRegister -> username:", username, "apartmentNumber:", apartmentNumber); // ✅ log
+      console.log("onRegister -> username:", username, "apartmentNumber:", apartmentNumber); //  log
 
       setUser(username);
       setApartmentNumber(apartmentNumber);
       localStorage.setItem('apartmentNumber', apartmentNumber);
 
-      // ✅ Verificación inmediata
+      //  Verificación inmediata
       console.log("localStorage después de onRegister:", localStorage.getItem('apartmentNumber'));
 
-      // ✅ Ejecutar fetchDatosIniciales inmediatamente para usuario nuevo
+      //  Ejecutar fetchDatosIniciales inmediatamente para usuario nuevo
       fetchDatosIniciales(apartmentNumber);
     }}
     goToLogin={() => setIsRegistering(false)} 
@@ -162,16 +162,16 @@ function App() {
 ) : (
   <Login
     onLogin={({ username, apartmentNumber }) => {
-      console.log("onLogin -> username:", username, "apartmentNumber:", apartmentNumber); // ✅ log
+      console.log("onLogin -> username:", username, "apartmentNumber:", apartmentNumber); //  log
 
       setUser(username);
       setApartmentNumber(apartmentNumber);
       localStorage.setItem('apartmentNumber', apartmentNumber);
 
-      // ✅ Verificación inmediata
+      //  Verificación inmediata
       console.log("localStorage después de onLogin:", localStorage.getItem('apartmentNumber'));
       
-      // ✅ No es necesario llamar fetchDatosIniciales aquí porque el useEffect se encargará
+      //  No es necesario llamar fetchDatosIniciales aquí porque el useEffect se encargará
     }}
     goToRegister={() => setIsRegistering(true)} 
 />
@@ -195,15 +195,15 @@ function AppContent({
   setFactura3Terminada,
   isProcessing, 
   setIsProcessing,
-  setUser,                // ✅ necesario para cerrar sesión manual
-  setApartmentNumber      // ✅ necesario para cerrar sesión manual
+  setUser,                
+  setApartmentNumber     
 }) {
 
   
  const navigate = useNavigate();
- const { timeLeftFactura1 } = useTemporizadorFactura1();
- const { timeLeftFactura2 } = useTemporizadorFactura2();
- const { timeLeftFactura3 } = useTemporizadorFactura3();
+ const { timeLeftFactura1, setTimeLeftFactura1 } = useTemporizadorFactura1();
+ const { timeLeftFactura2, setTimeLeftFactura2, startFactura2 } = useTemporizadorFactura2();
+ const { timeLeftFactura3, setTimeLeftFactura3, startFactura3 } = useTemporizadorFactura3();
 
 
   const { 
@@ -213,7 +213,7 @@ function AppContent({
     setFondoRojo, 
     startCountdown, 
     isRunning, 
-    formatTimeLeft,   // ✅ ahora sí lo extraemos
+    formatTimeLeft,   
     stopAndPersist 
   } = useTemporizador();
 
@@ -227,7 +227,12 @@ function AppContent({
         startCountdown,
         setClickCount,
         setFondoRojo,
-        setTimeLeft // ✅ ahora sí existe
+        setTimeLeft, 
+        setTimeLeftFactura1,
+        setTimeLeftFactura2,
+        setTimeLeftFactura3,
+        startFactura2,   
+        startFactura3,   
       });
     }
   }, [apartmentNumber]);
@@ -255,9 +260,9 @@ useEffect(() => {
     await cerrarSesionGlobal({
       auto: true,
       temporizadorPrincipal: timeLeft,
-      temporizadorFactura1: timeLeftFactura1, // ✅ agregado
-      temporizadorFactura2: timeLeftFactura2, // ✅ agregado
-      temporizadorFactura3: timeLeftFactura3, // ✅ agregado
+      temporizadorFactura1: timeLeftFactura1, 
+      temporizadorFactura2: timeLeftFactura2, 
+      temporizadorFactura3: timeLeftFactura3, 
       statusActual: clickCount,
       userId: apartmentNumber,
     });
@@ -280,8 +285,6 @@ useEffect(() => {
 
 
 
-
-
 // 🚨 Botón manual "Cerrar sesión"
 const handleCerrarSesion = async () => {
   console.log("👋 Cerrando sesión manual...");
@@ -290,9 +293,9 @@ const handleCerrarSesion = async () => {
   await cerrarSesionGlobal({
     auto: false,
     temporizadorPrincipal: timeLeft,
-    temporizadorFactura1: timeLeftFactura1, // ✅ agregado
-    temporizadorFactura2: timeLeftFactura2, // ✅ agregado
-    temporizadorFactura3: timeLeftFactura3, // ✅ agregado
+    temporizadorFactura1: timeLeftFactura1, 
+    temporizadorFactura2: timeLeftFactura2, 
+    temporizadorFactura3: timeLeftFactura3, 
     statusActual: clickCount,
     userId: apartmentNumber,
   });
