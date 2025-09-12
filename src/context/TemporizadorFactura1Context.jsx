@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 const TemporizadorFactura1Context = createContext();
 
-export function TemporizadorFactura1Provider({ children, initialTime = 60 }) {
+export function TemporizadorFactura1Provider({ children, initialTime = 1200 }) { // ⬅️ 20 minutos = 1200s
   const [timeLeftFactura1, setTimeLeftFactura1] = useState(initialTime);
 
   // Reducir el tiempo cada segundo

@@ -3,8 +3,8 @@
 
 //este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\context\TemporizadorContext.jsx" solo analizalo no modifiques nada  
 
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
 import { cerrarSesionGlobal } from "../utils/cerrarSesion";
 
 export const TemporizadorContext = createContext();
@@ -60,21 +60,16 @@ export function TemporizadorProvider({
     return () => clearInterval(interval);
   }, [isRunning, apartmentNumber, statusActual]);
 
-  // 🔹 Persistir automáticamente cada 15s mientras corre
+
+ // 👇 Ref para siempre tener el último valor sin re-render
+  const timeLeftRef = useRef(timeLeftState);
   useEffect(() => {
-    if (!apartmentNumber || !isRunning) return;
+    timeLeftRef.current = timeLeftState;
+  }, [timeLeftState]);
 
-    const interval = setInterval(() => {
-      cerrarSesionGlobal({
-        auto: false,
-        temporizadorPrincipal: timeLeftState,
-        userId: apartmentNumber,
-        statusActual,
-      });
-    }, 15000);
+ 
 
-    return () => clearInterval(interval);
-  }, [apartmentNumber, isRunning, timeLeftState, statusActual]);
+
 
   // Helpers
   const startCountdown = (secondsToRun = initialTime) => {
@@ -104,7 +99,7 @@ export function TemporizadorProvider({
     }
   };
 
-  // ✅ Formato HH:mm:ss
+  //  Formato HH:mm:ss
   const formatTimeLeft = (totalSeconds) => {
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
