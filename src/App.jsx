@@ -2,7 +2,6 @@
 //CODIGO en produccion 
 
 //este es mi archivo "C:\Users\user\projects\myapp\kiosko\src\App.jsx"  solo analizalo no modifiques nada  
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 
@@ -138,24 +137,32 @@ function AppContent({...props}) {
   const { timeLeftFactura3, setTimeLeftFactura3, startFactura3 } = useTemporizadorFactura3();
   const { timeLeft, setTimeLeft, fondoRojo, setFondoRojo, startCountdown, isRunning, formatTimeLeft } = useTemporizador();
 
-  // Restaurar datos backend
+  // Restaurar datos backend con flag isMounted
   useEffect(() => {
+    let isMounted = true;
     if (apartmentNumber) {
       restaurarDatos({
-        apartmentNumber, startCountdown, setClickCount, setFondoRojo,
-        setTimeLeft, setTimeLeftFactura1, setTimeLeftFactura2, setTimeLeftFactura3,
-        startFactura2, startFactura3
+        apartmentNumber,
+        startCountdown,
+        setClickCount: (v) => isMounted && setClickCount(v),
+        setFondoRojo: (v) => isMounted && setFondoRojo(v),
+        setTimeLeft: (v) => isMounted && setTimeLeft(v),
+        setTimeLeftFactura1: (v) => isMounted && setTimeLeftFactura1(v),
+        setTimeLeftFactura2: (v) => isMounted && setTimeLeftFactura2(v),
+        setTimeLeftFactura3: (v) => isMounted && setTimeLeftFactura3(v),
+        startFactura2: () => isMounted && startFactura2(),
+        startFactura3: () => isMounted && startFactura3(),
       });
     }
+    return () => { isMounted = false; };
   }, [apartmentNumber]);
 
   useEffect(() => { localStorage.setItem("timeLeftFactura2", timeLeftFactura2); }, [timeLeftFactura2]);
   useEffect(() => { localStorage.setItem("timeLeftFactura3", timeLeftFactura3); }, [timeLeftFactura3]);
 
-  // 🔄 beforeunload → solo notificar backend, no setState
+  // 🔄 beforeunload → solo notificar backend
   useEffect(() => {
     if (!apartmentNumber) return;
-
     const handleBeforeUnload = async (event) => {
       await cerrarSesionGlobal({
         auto: true,
@@ -168,7 +175,6 @@ function AppContent({...props}) {
       event.preventDefault();
       event.returnValue = '';
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [apartmentNumber, timeLeft, timeLeftFactura1, timeLeftFactura2, timeLeftFactura3, clickCount]);
@@ -213,7 +219,7 @@ function AppContent({...props}) {
       <footer style={{display:'flex',justifyContent:'center',transform:'translateY(-240px)'}}>
         <div style={{backgroundColor:'transparent',width:'250px',height:'70px',marginTop:'90px',marginLeft:'100px',
                      borderRadius:'100px',display:'flex',justifyContent:'center',alignItems:'center'}}>
-          {(clickCount > 0 || isRunning) && timeLeft > 0 && (
+          {(clickCount > 0 || isRunning) && timeLeft > 0 ? (
             <BotonPrincipal 
               clickCount={clickCount}
               setClickCount={setClickCount}
@@ -222,7 +228,7 @@ function AppContent({...props}) {
               apartmentNumber={apartmentNumber}
               startCountdown={startCountdown}
             />
-          )}
+          ) : null}
           <div style={{backgroundColor:'transparent',width:'110px',height:'60px',borderRadius:'12px',
                        display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center'}}>
             <button onClick={handleCerrarSesion}
