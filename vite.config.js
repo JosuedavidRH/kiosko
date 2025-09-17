@@ -11,4 +11,7 @@ export default defineConfig({
       additionalLegacyPolyfills: ['regenerator-runtime/runtime'], // para async/await
     }),
   ],
+  build: {
+    sourcemap: true, // 👈 esto habilita los source maps
+  },
 })
