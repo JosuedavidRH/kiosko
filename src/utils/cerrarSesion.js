@@ -4,6 +4,7 @@
 
 // C:\Users\user\projects2\myapp2\kiosko_local\src\utils\cerrarSesion.js
 
+
 export const cerrarSesionGlobal = ({
   auto = false,
   temporizadorPrincipal,
@@ -25,11 +26,15 @@ export const cerrarSesionGlobal = ({
       ? temporizadorPrincipal
       : Number.parseInt(localStorage.getItem("timeLeftPrincipal"), 10) || 0;
 
-  // Status
-  const status =
-    statusActual !== undefined
-      ? statusActual
-      : Number(localStorage.getItem("clickCount")) || 0;
+  // Status (usar parámetro si viene, localStorage solo como respaldo)
+  let status;
+  if (statusActual !== undefined) {
+    status = statusActual;
+  } else {
+    const rawStatus = localStorage.getItem("clickCount");
+    status = rawStatus !== null ? Number(rawStatus) : 0;
+    console.warn("⚠️ cerrarSesionGlobal: statusActual no recibido, usando localStorage:", status);
+  }
 
   // Factura1
   const tempFactura1 =
@@ -62,7 +67,7 @@ export const cerrarSesionGlobal = ({
   try {
     if (auto && navigator.sendBeacon) {
       navigator.sendBeacon(
-        "https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", // 👈 NUEVO endpoint unificado en backend local
+        "https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", // 👈 endpoint producción
         new Blob([body], { type: "application/json" })
       );
 
