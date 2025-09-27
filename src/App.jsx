@@ -297,7 +297,6 @@ const handleCerrarSesion = async () => {
     temporizadorFactura1: timeLeftFactura1,
     temporizadorFactura2: timeLeftFactura2, 
     temporizadorFactura3: timeLeftFactura3,
-    statusActual: clickCount,
     userId: apartmentNumber,
   });
 
