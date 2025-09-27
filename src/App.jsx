@@ -291,8 +291,6 @@ useEffect(() => {
 const handleCerrarSesion = async () => {
   console.log("👋 Cerrando sesión manual...");
 
- 
-
   // 1️⃣ Enviar al backend ANTES de limpiar estado
   await cerrarSesionGlobal({
     auto: false,
@@ -300,6 +298,7 @@ const handleCerrarSesion = async () => {
     temporizadorFactura1: timeLeftFactura1,
     temporizadorFactura2: timeLeftFactura2, 
     temporizadorFactura3: timeLeftFactura3,
+    statusActual: clickCount,   // 👈 NECESARIO para que no llegue 0
     userId: apartmentNumber,
   });
 
