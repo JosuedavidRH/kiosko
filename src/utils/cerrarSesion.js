@@ -2,9 +2,10 @@
 //CODIGO en produccion 
 
 
+
 // C:\Users\user\projects\myapp\kiosko\src\utils\cerrarSesion.js
 
-export const cerrarSesionGlobal = ({
+export const cerrarSesionGlobal = async ({
   auto = false,
   temporizadorPrincipal,
   statusActual,
@@ -62,7 +63,7 @@ export const cerrarSesionGlobal = ({
   try {
     if (auto && navigator.sendBeacon) {
       navigator.sendBeacon(
-        "https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", // 👈 NUEVO endpoint unificado en backend local
+        "https://backend-1uwd.onrender.com/api/realTime/cerrarSesion",
         new Blob([body], { type: "application/json" })
       );
 
@@ -79,8 +80,8 @@ export const cerrarSesionGlobal = ({
       return;
     }
 
-    // Manual con fetch
-    fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
+    // Manual con fetch (esperamos a que termine antes de limpiar storage)
+    await fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
