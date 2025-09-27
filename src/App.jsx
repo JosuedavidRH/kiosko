@@ -291,14 +291,16 @@ useEffect(() => {
 const handleCerrarSesion = async () => {
   console.log("👋 Cerrando sesión manual...");
 
+  // 🔑 Asegurar que localStorage tenga el valor más nuevo
+  localStorage.setItem("clickCount", clickCount);
+
   // 1️⃣ Enviar al backend ANTES de limpiar estado
   await cerrarSesionGlobal({
     auto: false,
     temporizadorPrincipal: timeLeft,
     temporizadorFactura1: timeLeftFactura1,
-    temporizadorFactura2: timeLeftFactura2, 
+    temporizadorFactura2: timeLeftFactura2,
     temporizadorFactura3: timeLeftFactura3,
-    statusActual: clickCount,   // 👈 NECESARIO para que no llegue 0
     userId: apartmentNumber,
   });
 
