@@ -286,9 +286,13 @@ useEffect(() => {
 
 
 
+
 // 🚨 Botón manual "Cerrar sesión"
 const handleCerrarSesion = async () => {
   console.log("👋 Cerrando sesión manual...");
+
+  // ✅ Asegurar que siempre tomamos el valor más confiable
+  const lastClickCount = Number(localStorage.getItem("clickCount")) || clickCount;
 
   // 1️⃣ Enviar al backend ANTES de limpiar estado
   await cerrarSesionGlobal({
@@ -297,6 +301,7 @@ const handleCerrarSesion = async () => {
     temporizadorFactura1: timeLeftFactura1,
     temporizadorFactura2: timeLeftFactura2, 
     temporizadorFactura3: timeLeftFactura3,
+    statusActual: lastClickCount, // 👈 siempre consistente
     userId: apartmentNumber,
   });
 
@@ -307,7 +312,6 @@ const handleCerrarSesion = async () => {
   // 3️⃣ Recargar para asegurar que todo queda limpio
   window.location.reload();
 };
-
 
 
 
