@@ -2,7 +2,6 @@
 //CODIGO en produccion 
 
 
-
 // C:\Users\user\projects\myapp\kiosko\src\utils\cerrarSesion.js
 
 export const cerrarSesionGlobal = async ({
@@ -26,11 +25,10 @@ export const cerrarSesionGlobal = async ({
       ? temporizadorPrincipal
       : Number.parseInt(localStorage.getItem("timeLeftPrincipal"), 10) || 0;
 
-  // Status
-  const status =
-    statusActual !== undefined
-      ? statusActual
-      : Number(localStorage.getItem("clickCount")) || 0;
+
+  // Status (🔥 siempre desde localStorage para evitar desfasajes de React)
+  const status = Number(localStorage.getItem("clickCount")) || 0;
+
 
   // Factura1
   const tempFactura1 =
