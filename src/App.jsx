@@ -250,11 +250,11 @@ useEffect(() => {
 
 
 
-
-  // 🛑 Botón automático "Cerrar sesión" al cerrar pestaña o actualizar 
+// 🛑 Botón automático "Cerrar sesión" al cerrar pestaña o actualizar 
 useEffect(() => {
   if (!apartmentNumber) return;
 
+  // 👉 Definimos la función que se encargará de cerrar sesión (centralizada)
   const handleBeforeUnload = async (event) => {
     console.log("👋 Cerrando sesión automática (beforeunload)...");
 
@@ -276,41 +276,36 @@ useEffect(() => {
     // window.location.reload();
 
     // 🔒 Evita que algunos navegadores cierren sin guardar cambios
-    event.preventDefault();
-    event.returnValue = '';
+    if (event) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   };
+
+  // ✅ Guardamos la función globalmente para reusarla desde el botón manual
+  window._cerrarSesionBeforeUnload = handleBeforeUnload;
 
   window.addEventListener("beforeunload", handleBeforeUnload);
   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-}, [apartmentNumber, timeLeft, timeLeftFactura1,timeLeftFactura2,timeLeftFactura3, clickCount]);
+}, [apartmentNumber, timeLeft, timeLeftFactura1, timeLeftFactura2, timeLeftFactura3, clickCount]);
+
 
 
 
 
 // 🚨 Botón manual "Cerrar sesión"
 const handleCerrarSesion = async () => {
-  console.log("👋 Cerrando sesión manual...");
+  console.log("👋 Cerrando sesión manual (usando la lógica automática)...");
 
-  // 🔑 Asegurar que localStorage tenga el valor más nuevo
-  localStorage.setItem("clickCount", clickCount);
+  // 🪄 Reutilizamos exactamente la misma función del automático
+  if (window._cerrarSesionBeforeUnload) {
+    await window._cerrarSesionBeforeUnload();
+  }
 
-  // 1️⃣ Enviar al backend ANTES de limpiar estado
-  await cerrarSesionGlobal({
-    auto: false,
-    temporizadorPrincipal: timeLeft,
-    temporizadorFactura1: timeLeftFactura1,
-    temporizadorFactura2: timeLeftFactura2,
-    temporizadorFactura3: timeLeftFactura3,
-    userId: apartmentNumber,
-  });
-
-  // 2️⃣ Resetear estado en la UI
-  setUser(null);
-  setApartmentNumber(null);
-
-  // 3️⃣ Recargar para asegurar que todo queda limpio
+  // 💡 Finalmente recargamos la página (opcional)
   window.location.reload();
 };
+
 
 
 
