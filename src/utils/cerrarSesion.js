@@ -79,7 +79,7 @@ export const cerrarSesionGlobal = async ({
     }
 
     // Manual con fetch (esperamos a que termine antes de limpiar storage)
-    await fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
+     fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
