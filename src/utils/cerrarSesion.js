@@ -26,9 +26,6 @@ export const cerrarSesionGlobal = async ({
       : Number.parseInt(localStorage.getItem("timeLeftPrincipal"), 10) || 0;
 
 
-  // Status (🔥 siempre desde localStorage para evitar desfasajes de React)
-  const status = Number(localStorage.getItem("clickCount")) || 0;
-
 
   // Factura1
   const tempFactura1 =
@@ -52,7 +49,6 @@ export const cerrarSesionGlobal = async ({
   const body = JSON.stringify({
     userId,
     temporizadorPrincipal: temp,
-    statusActual: status,
     temporizadorFactura1: tempFactura1,
     temporizadorFactura2: tempFactura2,
     temporizadorFactura3: tempFactura3,
@@ -67,7 +63,6 @@ export const cerrarSesionGlobal = async ({
 
       console.log("📡 Datos enviados con sendBeacon (auto)", {
         temp,
-        status,
         tempFactura1,
         tempFactura2,
         tempFactura3,
@@ -79,7 +74,7 @@ export const cerrarSesionGlobal = async ({
     }
 
     // Manual con fetch (esperamos a que termine antes de limpiar storage)
-     fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
+      await fetch("https://backend-1uwd.onrender.com/api/realTime/cerrarSesion", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
@@ -88,7 +83,6 @@ export const cerrarSesionGlobal = async ({
 
     console.log("📡 Datos enviados con fetch (manual)", {
       temp,
-      status,
       tempFactura1,
       tempFactura2,
       tempFactura3,
